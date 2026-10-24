@@ -1,0 +1,47 @@
+# ===== Node / Electron =====
+node_modules/
+dist/
+out/
+release/
+*.log
+.DS_Store
+Thumbs.db
+
+# ===== Secrets =====
+.env
+.env.*
+!.env.example
+
+# ===== Copyrighted assets (DO NOT COMMIT) =====
+# 캐릭터 이미지/스프라이트는 각자 로컬에만 둔다. (packs/_example 만 예외로 커밋)
+packs/*
+!packs/_example/
+
+# ===== Voice data & models (DO NOT COMMIT) =====
+voice/data/
+voice/models/
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+*.opus
+*.webm
+*.mp4
+*.mkv
+*.pth
+*.ckpt
+*.pt
+*.safetensors
+*.onnx
+
+# ===== Python =====
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ===== IDE =====
+.vscode/*
+!.vscode/extensions.json
+.idea/
