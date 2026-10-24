@@ -3,6 +3,7 @@ node_modules/
 dist/
 out/
 release/
+coverage/
 *.log
 .DS_Store
 Thumbs.db
@@ -16,19 +17,25 @@ Thumbs.db
 # 캐릭터 이미지/스프라이트는 각자 로컬에만 둔다. (packs/_example 만 예외로 커밋)
 packs/*
 !packs/_example/
+# 스프라이트 원본 파일은 어디에 있든 제외
+*.aseprite
+*.ase
+*.piskel
 
-# ===== Voice data & models (DO NOT COMMIT) =====
-voice/data/
-voice/models/
-*.wav
-*.mp3
-*.m4a
-*.flac
-*.ogg
-*.opus
-*.webm
+# ===== Voice track (DO NOT COMMIT) =====
+# 범용 스크립트와 문서, 예시 설정만 커밋한다.
+# 수집 대상 주소, 오디오, 받아쓴 대사(저작물), GPT-SoVITS 클론, 모델은 모두 로컬 전용.
+voice/*
+!voice/scripts/
+!voice/README.md
+!voice/*.example.*
+
+# 원본 영상은 어디에 있든 제외
 *.mp4
 *.mkv
+*.webm
+
+# 모델 가중치는 어디에 있든 제외
 *.pth
 *.ckpt
 *.pt
@@ -44,4 +51,5 @@ venv/
 # ===== IDE =====
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
