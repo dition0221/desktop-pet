@@ -24,22 +24,24 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 ## 앱 트랙
 
 ### Phase 0. 프로젝트 셋업
+
 - [x] Node.js 24 LTS 업그레이드 (electron-vite 요구사항 20.19+ / 22.12+ 충족)
-- [ ] electron-vite (React + TS 템플릿)로 프로젝트 생성, pnpm 사용
-- [ ] 템플릿 정리
-  - [ ] ESLint / Prettier 설정·스크립트·의존성 제거 (`eslint.config.mjs`, `.prettierrc.yaml` 등) → Biome로 교체
-  - [ ] preload의 `@electron-toolkit/preload` `electronAPI` 노출 제거 (임의 IPC 채널을 열어줌)
-  - [ ] `sandbox: true` — preload는 단일 CJS 번들 유지 (`package.json`에 `"type": "module"` 넣지 않기)
-  - [ ] `setWindowOpenHandler`: 모든 URL을 여는 기본 동작 → https 허용 목록만 `shell.openExternal`
-- [ ] `pnpm install` 후 `pnpm ignored-builds`로 실제 차단된 빌드 스크립트 확인 → 필요한 것만 `pnpm-workspace.yaml`의 `onlyBuiltDependencies`에 등록
-- [ ] Biome 설정 (Tailwind v4용 `css.parser.tailwindDirectives: true` 포함), `.vscode/settings.json`에서 Biome를 기본 포맷터로, `.vscode/extensions.json`에 확장 추천
-- [ ] Tailwind CSS v4, Vitest 설정 (샘플 테스트 1개 — 테스트가 없으면 Vitest는 실패로 처리)
-- [ ] electron-builder: Electron Fuses 설정 (RunAsNode · NodeOptions · inspect 비활성, asar 무결성 검사)
-- [ ] 개발 모드는 별도 userData 폴더 사용 (설치본 설정·키와 섞이지 않게)
+- [x] electron-vite (React + TS 템플릿)로 프로젝트 생성, pnpm 사용
+- [x] 템플릿 정리
+  - [x] ESLint / Prettier 설정·스크립트·의존성 제거 (`eslint.config.mjs`, `.prettierrc.yaml` 등) → Biome로 교체
+  - [x] preload의 `@electron-toolkit/preload` `electronAPI` 노출 제거 (임의 IPC 채널을 열어줌)
+  - [x] `sandbox: true` — preload는 단일 CJS 번들 유지 (`package.json`에 `"type": "module"` 넣지 않기)
+  - [x] `setWindowOpenHandler`: 모든 URL을 여는 기본 동작 → https 허용 목록만 `shell.openExternal`
+- [x] `pnpm install` 후 `pnpm ignored-builds`로 실제 차단된 빌드 스크립트 확인 → 필요한 것만 `pnpm-workspace.yaml`의 `onlyBuiltDependencies`에 등록
+- [x] Biome 설정 (Tailwind v4용 `css.parser.tailwindDirectives: true` 포함), `.vscode/settings.json`에서 Biome를 기본 포맷터로, `.vscode/extensions.json`에 확장 추천
+- [x] Tailwind CSS v4, Vitest 설정 (샘플 테스트 1개 — 테스트가 없으면 Vitest는 실패로 처리)
+- [x] electron-builder: Electron Fuses 설정 (RunAsNode · NodeOptions · inspect 비활성, asar 무결성 검사)
+- [x] 개발 모드는 별도 userData 폴더 사용 (설치본 설정·키와 섞이지 않게)
 
 **완료 조건**: `pnpm dev`로 창이 뜨고 `pnpm lint` / `pnpm typecheck` / `pnpm test`가 통과한다. `pnpm build:win`으로 만든 설치 파일이 설치·실행된다.
 
 ### Phase 1. 골조 — 펫 오버레이 + 메인 창 레이아웃
+
 - 앱 수명주기
   - [ ] 단일 실행 (`requestSingleInstanceLock`) — 두 번째 실행 시 기존 메인 창 활성화
   - [ ] 메인 창 닫기 = 숨김, 종료는 트레이 메뉴에서만
@@ -60,6 +62,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
   - [ ] 사이드바 + 페이지 레이아웃: 홈 / 버스 / 대화 / 펫 / 설정 (내용은 빈 페이지)
 - 창 간 동기화
   - [ ] 메인 프로세스 → 각 창 브로드캐스트 채널 (설정 변경, 펫 표시 여부, 선택한 팩)
+  - [ ] 프로세스 경계 import 제한 (Biome override): 렌더러는 `@main/*` 금지·`@preload/api`는 `import type`만, preload는 `@main/*`·`@renderer/*` 금지
 - 설정 · 키 저장 인프라
   - [ ] `userData/settings.json` (일반 설정, 평문)
   - [ ] `userData/secrets.json` (`safeStorage` 암호화) — 앱 `ready` 이후 사용, 암호화를 쓸 수 없으면 평문 저장하지 않고 저장 거부
@@ -75,6 +78,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 - 앱을 두 번 실행하면 기존 창이 활성화된다.
 
 ### Phase 2. 대전 버스 위젯 → v0.1
+
 - 준비
   - [ ] 사용할 데이터셋 결정: 신규(정류소정보 15157895 · 도착정보 15157920 · 노선 15157896) vs 구 `GetStatListService`(15110691, 정류소 ID 형식이 다름) — 신규 우선 검토
   - [ ] 공공데이터포털에서 사용할 API마다 각각 활용신청 (정류소 + 도착정보)
@@ -97,6 +101,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 **v0.1 릴리스**: `develop` → `main` 머지, 태그 `v0.1.0`, GitHub Releases에 설치 파일 업로드
 
 ### Phase 3. 펫 고도화
+
 - [ ] 상태 머신: 대기 / 걷기 / 앉기 / 잠자기 (순수 모듈로 분리, Vitest로 테스트)
 - [ ] 드래그로 집어 옮기기, 놓으면 떨어지기
 - [ ] 클릭 반응 + 고정 반응 대사 — 팩에 음성 파일이 있으면 재생 (선택 사항, 없으면 말풍선만)
@@ -109,6 +114,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 **완료 조건**: 상태 전환 테스트가 통과하고, 드래그 후 놓으면 떨어진다. 모니터 두 개 사이를 펫이 이동할 수 있다.
 
 ### Phase 4. 대화 (텍스트 입력)
+
 - [ ] LLM 제공자 추상화 (Gemini 기본, Claude 대안)
 - [ ] 설정: 제공자 선택 + 키 테스트 버튼 (저장된 키로 메인 프로세스에서 호출)
 - [ ] Gemini 무료 티어 고지: 입력·출력이 Google 제품 개선에 사용되고 사람이 검토할 수 있음, 만 18세 이상
@@ -122,6 +128,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 **완료 조건**: 키를 저장하고 질문하면 하치와레 말투의 답변이 대화 페이지와 펫 말풍선에 스트리밍으로 표시된다. 키가 없으면 안내 문구가 표시된다.
 
 ### Phase 5. TTS 연동
+
 - [ ] 앱이 GPT-SoVITS API 서버를 자식 프로세스로 실행·종료 (설정에서 설치 경로 지정, 앱에 포함하지 않음)
   - [ ] 기동 대기(헬스체크), 포트 충돌 처리, 앱 종료 시 함께 종료
 - [ ] 보안 래퍼: `127.0.0.1` 바인딩 + 랜덤 포트 + 요청 토큰 헤더 확인 (또는 `Origin` 헤더가 있는 요청 거부), 모델 가중치 경로는 앱이 고정
@@ -131,7 +138,8 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 **완료 조건**: 질문에 대한 답변이 첫 문장부터 하치와레 목소리로 재생된다. TTS 서버를 꺼도 대화는 정상 동작한다.
 
 ### 추후
-- [ ] 마이크 음성 인식 (STT) — Groq Whisper 무료 API 또는 로컬 faster-whisper
+
+- [ ] 마이크 음성 인식 (STT) — Groq Whisper 무료 API 또는 로컬 faster-whisper, 권한 핸들러에서 마이크만 허용
 - [ ] 전체화면 앱(게임 등) 실행 중 펫 자동 숨김
 - [ ] Windows 시작 시 자동 실행 (`setLoginItemSettings`)
 - [ ] 자동 업데이트 (electron-updater) + 코드 서명 (서명이 없으면 SmartScreen 경고)
@@ -146,18 +154,22 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 > 공개 저장소에는 범용 스크립트만 둔다. 수집 대상 영상 주소·구간, 오디오, 받아쓴 대사, 모델은 모두 로컬 전용(`voice/` 아래 `.gitignore` 대상)이다.
 
 ### V1. 가능성 테스트 ⭐ 가장 먼저
+
 - [ ] 하치와레 대사 5~10초를 골라 GPT-SoVITS 제로샷 합성 → 음질·한국어 억양 확인
 - 결과가 나쁘면 방식 재검토 (Qwen3-TTS 제로샷, TTS + RVC 변환 등)
 
 ### V2. 데이터 수집
+
 - [ ] 로컬 설정 파일에 지정한 원본에서 오디오 추출 (yt-dlp + ffmpeg), 노래 영상은 제외
 - [ ] 보컬 분리 (UVR5) → 하치와레 화자만 추출 (화자 임베딩 + 수동 검수)
 - [ ] 받아쓰기 (faster-whisper) + 교정 — 이 대사 목록은 Phase 4 페르소나 예시로도 사용 (저작물이므로 로컬 전용)
 
 ### V3. 학습
+
 - [ ] 깨끗한 음성 10~30분으로 GPT-SoVITS 학습 (Kaggle 무료 GPU, 대안 Colab)
 
 ### V4. 로컬 추론
+
 - [ ] 로컬에서 GPT-SoVITS API 서버 실행 — CPU 또는 GTX 970 (PyTorch cu126 빌드), 속도 측정
 - [ ] 고정 반응 대사 음성 미리 생성 → 하치와레 팩에 포함
 
@@ -165,28 +177,28 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 
 ## 결정 사항
 
-| 항목 | 결정 | 이유 |
-|---|---|---|
-| 데스크탑 프레임워크 | **Electron** (Tauri 대신) | 메인 프로세스까지 JS/TS로 작성 가능, `forward` 옵션으로 클릭 통과가 깔끔함, 자료·채용 많음. Python TTS 서버가 어차피 메모리를 많이 써서 Tauri의 경량 이점이 작음 |
-| 펫 창 방식 | **디스플레이당 투명 오버레이 1개 + 클릭 통과** | 작은 창을 `setPosition`으로 옮기는 방식은 Windows에서 움직임이 끊겨 보임. 모니터별로 창을 두면 다중 모니터·배율 차이에 대응 가능 |
-| 펫 상태 소유 | **메인 프로세스** (전역 DIP 좌표) | 모니터 간 이동, 오버레이·메인 창 동기화를 한곳에서 처리 |
-| 펫 입력 | 클릭 = 반응, 더블클릭 = 메인 창, 우클릭 = 메뉴, 누른 채 이동 = 드래그 | 같은 입력에 기능이 겹치지 않도록 처음부터 고정 |
-| 펫 팩 위치 · 로딩 | 개발 `packs/`, 설치본 `userData/packs/`, `pack://` 프로토콜 | 설치본의 앱 내부(asar)는 읽기 전용이라 사용자 팩 추가 불가. sandbox + CSP 환경에서 `file://` 대신 팩 폴더만 노출 |
-| 개발 순서 | **골조 → 버스 위젯 먼저** | TTS는 병렬 트랙이라 기다릴 필요 없음. 빠르게 실사용 가능한 v0.1 확보 |
-| 버스 폴링 | **메인 프로세스 스케줄러** | 메인 창을 닫아도 펫 알림이 동작해야 함. API 호출 한도를 한곳에서 관리 |
-| 패키지 매니저 / 린트 | **pnpm + Biome** (ESLint + Prettier 대신) | 설치 빠름, 린트·포맷을 도구 하나로 처리, 설정 단순 |
-| 상태 관리 | **Jotai** (Zustand 대신) | 사용 경험 있음(Recoil·Jotai). 펫 오버레이 창과 메인 창은 별도 프로세스라, 창 간 공유 상태는 라이브러리와 무관하게 메인 프로세스 IPC로 동기화 |
-| TTS | **GPT-SoVITS** | 무료, 한국어 지원, 적은 데이터(수 분)로 학습 가능, API 서버 모드 제공 |
-| TTS 배포 | **앱에 포함하지 않음** | 용량이 GB 단위. 설정에서 설치 경로를 지정하고, 없으면 말풍선만 표시 |
-| 학습 환경 | **Kaggle / Colab 무료 GPU** | 로컬 GPU(GTX 970, 4GB)는 학습하기에 VRAM 부족 |
-| LLM | **Gemini API 무료 티어**, 제공자 추상화 | 무료, 한국어 품질 좋음. 무료 티어는 호출 제한이 있고 입력·출력이 제품 개선에 사용(사람 검토 포함)되므로 고지 + 교체 가능하게 설계 (대안: Claude Haiku 5.5, 월 $1 미만 수준) |
-| API 키 | **사용자가 직접 입력 (BYOK)** — LLM, 버스 API 모두 | 토큰·호출 한도를 각 사용자 키로 사용. 개발자 키를 앱에 넣지 않음 |
-| API 키 저장 | 개발·설치본 모두 설정 폼 + `userData/secrets.json` + `safeStorage` | 해시는 복호화가 안 되므로 사용 불가. `safeStorage`는 OS(Windows DPAPI)가 암호화 키를 관리. 다른 Windows 사용자·다른 PC로부터는 보호되지만, 같은 사용자로 실행되는 다른 앱은 막지 못함 |
-| `.env` | 키를 넣지 않는 것이 원칙. 쓰더라도 `MAIN_VITE_` 접두사 금지, 런타임 `process.env`로만 | `MAIN_VITE_*` 값은 빌드 시 번들에 그대로 박혀 설치 파일로 유출됨 |
-| 설정 저장 | `userData/settings.json` (평문), DB 없음 | 값이 적어 JSON으로 충분. 키와 파일을 분리해 설정 공유 시 키 노출 방지. 대화 기록 등 누적 데이터가 생기면 SQLite 검토 |
-| 음성 인식 | **보류** | 초기 범위에서 제외, 텍스트 입력으로 대체 |
-| 저장소 공개 | **Public** | 코드만 공개. 캐릭터 이미지·음성 데이터·모델·API 키는 `.gitignore`로 제외 |
-| 음성 수집 정보 | **로컬 전용** | 수집 대상 주소·절차를 공개 문서에 남기지 않음 (YouTube 약관, 저작권) |
+| 항목                 | 결정                                                                                  | 이유                                                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 데스크탑 프레임워크  | **Electron** (Tauri 대신)                                                             | 메인 프로세스까지 JS/TS로 작성 가능, `forward` 옵션으로 클릭 통과가 깔끔함, 자료·채용 많음. Python TTS 서버가 어차피 메모리를 많이 써서 Tauri의 경량 이점이 작음                      |
+| 펫 창 방식           | **디스플레이당 투명 오버레이 1개 + 클릭 통과**                                        | 작은 창을 `setPosition`으로 옮기는 방식은 Windows에서 움직임이 끊겨 보임. 모니터별로 창을 두면 다중 모니터·배율 차이에 대응 가능                                                      |
+| 펫 상태 소유         | **메인 프로세스** (전역 DIP 좌표)                                                     | 모니터 간 이동, 오버레이·메인 창 동기화를 한곳에서 처리                                                                                                                               |
+| 펫 입력              | 클릭 = 반응, 더블클릭 = 메인 창, 우클릭 = 메뉴, 누른 채 이동 = 드래그                 | 같은 입력에 기능이 겹치지 않도록 처음부터 고정                                                                                                                                        |
+| 펫 팩 위치 · 로딩    | 개발 `packs/`, 설치본 `userData/packs/`, `pack://` 프로토콜                           | 설치본의 앱 내부(asar)는 읽기 전용이라 사용자 팩 추가 불가. sandbox + CSP 환경에서 `file://` 대신 팩 폴더만 노출                                                                      |
+| 개발 순서            | **골조 → 버스 위젯 먼저**                                                             | TTS는 병렬 트랙이라 기다릴 필요 없음. 빠르게 실사용 가능한 v0.1 확보                                                                                                                  |
+| 버스 폴링            | **메인 프로세스 스케줄러**                                                            | 메인 창을 닫아도 펫 알림이 동작해야 함. API 호출 한도를 한곳에서 관리                                                                                                                 |
+| 패키지 매니저 / 린트 | **pnpm + Biome** (ESLint + Prettier 대신)                                             | 설치 빠름, 린트·포맷을 도구 하나로 처리, 설정 단순                                                                                                                                    |
+| 상태 관리            | **Jotai** (Zustand 대신)                                                              | 사용 경험 있음(Recoil·Jotai). 펫 오버레이 창과 메인 창은 별도 프로세스라, 창 간 공유 상태는 라이브러리와 무관하게 메인 프로세스 IPC로 동기화                                          |
+| TTS                  | **GPT-SoVITS**                                                                        | 무료, 한국어 지원, 적은 데이터(수 분)로 학습 가능, API 서버 모드 제공                                                                                                                 |
+| TTS 배포             | **앱에 포함하지 않음**                                                                | 용량이 GB 단위. 설정에서 설치 경로를 지정하고, 없으면 말풍선만 표시                                                                                                                   |
+| 학습 환경            | **Kaggle / Colab 무료 GPU**                                                           | 로컬 GPU(GTX 970, 4GB)는 학습하기에 VRAM 부족                                                                                                                                         |
+| LLM                  | **Gemini API 무료 티어**, 제공자 추상화                                               | 무료, 한국어 품질 좋음. 무료 티어는 호출 제한이 있고 입력·출력이 제품 개선에 사용(사람 검토 포함)되므로 고지 + 교체 가능하게 설계 (대안: Claude Haiku 5.5, 월 $1 미만 수준)           |
+| API 키               | **사용자가 직접 입력 (BYOK)** — LLM, 버스 API 모두                                    | 토큰·호출 한도를 각 사용자 키로 사용. 개발자 키를 앱에 넣지 않음                                                                                                                      |
+| API 키 저장          | 개발·설치본 모두 설정 폼 + `userData/secrets.json` + `safeStorage`                    | 해시는 복호화가 안 되므로 사용 불가. `safeStorage`는 OS(Windows DPAPI)가 암호화 키를 관리. 다른 Windows 사용자·다른 PC로부터는 보호되지만, 같은 사용자로 실행되는 다른 앱은 막지 못함 |
+| `.env`               | 키를 넣지 않는 것이 원칙. 쓰더라도 `MAIN_VITE_` 접두사 금지, 런타임 `process.env`로만 | `MAIN_VITE_*` 값은 빌드 시 번들에 그대로 박혀 설치 파일로 유출됨                                                                                                                      |
+| 설정 저장            | `userData/settings.json` (평문), DB 없음                                              | 값이 적어 JSON으로 충분. 키와 파일을 분리해 설정 공유 시 키 노출 방지. 대화 기록 등 누적 데이터가 생기면 SQLite 검토                                                                  |
+| 음성 인식            | **보류**                                                                              | 초기 범위에서 제외, 텍스트 입력으로 대체                                                                                                                                              |
+| 저장소 공개          | **Public**                                                                            | 코드만 공개. 캐릭터 이미지·음성 데이터·모델·API 키는 `.gitignore`로 제외                                                                                                              |
+| 음성 수집 정보       | **로컬 전용**                                                                         | 수집 대상 주소·절차를 공개 문서에 남기지 않음 (YouTube 약관, 저작권)                                                                                                                  |
 
 ## 보안 체크리스트
 
@@ -197,6 +209,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 - [ ] preload는 기능 단위 API만 노출 (`ipcRenderer`·`electronAPI` 통째로 노출 금지)
 - [ ] 메인 프로세스 IPC 핸들러: 인자를 Zod로 검증, 요청한 창(sender) 확인
 - [ ] 엄격한 CSP, 앱 내 페이지 이동·새 창 차단 (`will-navigate`, `setWindowOpenHandler`)
+- [ ] 권한 요청(카메라·마이크 등) 전부 거부 — 필요한 기능이 생기면 해당 권한만 허용
 - [ ] 외부 링크는 `shell.openExternal` + https 허용 목록만
 - [ ] `pack://` 핸들러는 팩 루트 밖 경로 차단
 - [ ] Electron Fuses: RunAsNode · NodeOptions · inspect 비활성, asar 무결성 검사

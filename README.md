@@ -22,15 +22,15 @@ Data : <img src="https://img.shields.io/badge/공공데이터포털-0066CC?style
 
 ## 기술 스택
 
-| 영역 | 사용 기술 |
-|---|---|
-| 데스크탑 | Electron + electron-vite, electron-builder (Windows 설치 파일) |
-| UI | React, TypeScript, Tailwind CSS |
+| 영역          | 사용 기술                                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------------------- |
+| 데스크탑      | Electron + electron-vite, electron-builder (Windows 설치 파일)                                                  |
+| UI            | React, TypeScript, Tailwind CSS                                                                                 |
 | 상태 / 데이터 | Jotai (화면 상태), TanStack Query (메인 프로세스가 가져온 데이터의 조회·캐시), Zod (API 응답·펫 팩 스키마 검증) |
-| 개발 도구 | pnpm, Biome (린트 + 포맷), Vitest |
-| LLM | Gemini (기본, 무료 티어) / Claude — 사용자 본인 API 키 |
-| TTS | GPT-SoVITS — 로컬 Python API 서버 (앱에 포함하지 않음, 없으면 말풍선만 표시) |
-| 공공 데이터 | 공공데이터포털 대전광역시 버스 API — 사용자 본인 API 키 |
+| 개발 도구     | pnpm, Biome (린트 + 포맷), Vitest                                                                               |
+| LLM           | Gemini (기본, 무료 티어) / Claude — 사용자 본인 API 키                                                          |
+| TTS           | GPT-SoVITS — 로컬 Python API 서버 (앱에 포함하지 않음, 없으면 말풍선만 표시)                                    |
+| 공공 데이터   | 공공데이터포털 대전광역시 버스 API — 사용자 본인 API 키                                                         |
 
 ## 시작하기
 
