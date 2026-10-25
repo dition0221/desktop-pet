@@ -1,0 +1,29 @@
+appId: io.github.dition0221.desktop-pet
+productName: desktop-pet
+directories:
+  buildResources: build
+  output: release/${version}
+# 화이트리스트 — 문서·설정 파일이 새로 생겨도 설치본에 섞이지 않게
+files:
+  - out/**
+  - resources/**
+  - package.json
+asarUnpack:
+  - resources/**
+# https://www.electronjs.org/docs/latest/tutorial/fuses
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+win:
+  executableName: desktop-pet
+  target:
+    - nsis
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+npmRebuild: false

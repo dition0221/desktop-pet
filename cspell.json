@@ -29,6 +29,15 @@
     "safetensors",
     "venv",
     "backoff",
-    "frameless"
+    "frameless",
+    "asar",
+    "nsis",
+    "winstaller",
+    "biomejs",
+    "bradlc",
+    "esbenp",
+    "dbaeumer",
+    "dition",
+    "vite"
   ]
 }
