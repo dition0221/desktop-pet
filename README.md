@@ -25,7 +25,7 @@ Data : <img src="https://img.shields.io/badge/공공데이터포털-0066CC?style
 | 영역          | 사용 기술                                                                                                       |
 | ------------- | --------------------------------------------------------------------------------------------------------------- |
 | 데스크탑      | Electron + electron-vite, electron-builder (Windows 설치 파일)                                                  |
-| UI            | React, TypeScript, Tailwind CSS                                                                                 |
+| UI            | React, TypeScript, Tailwind CSS, TanStack Router (파일 기반 라우팅)                                             |
 | 상태 / 데이터 | Jotai (화면 상태), TanStack Query (메인 프로세스가 가져온 데이터의 조회·캐시), Zod (API 응답·펫 팩 스키마 검증) |
 | 개발 도구     | pnpm, Biome (린트 + 포맷), Vitest                                                                               |
 | LLM           | Gemini (기본, 무료 티어) / Claude — 사용자 본인 API 키                                                          |
