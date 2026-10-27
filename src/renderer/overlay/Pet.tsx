@@ -17,7 +17,9 @@ function Pet(): React.JSX.Element {
   usePetAnimation(petRef, bodyRef, sprite)
 
   useEffect(() => {
+    const unsubscribe = window.api.pet.onSpriteChange(setSprite)
     void window.api.pet.getSprite().then(setSprite, () => setSprite(null))
+    return unsubscribe
   }, [])
 
   const react = (): void => {

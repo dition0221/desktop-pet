@@ -13,11 +13,23 @@ function subscribe<T>(channel: string, listener: (payload: T) => void): () => vo
 
 /** 기능 단위 함수만 노출 — ipcRenderer 통째 노출 금지, sandbox라 Node 모듈 require 불가 */
 const api: DesktopPetApi = {
+  settings: {
+    get: () => ipcRenderer.invoke(IPC.settingsGet),
+    onChange: (listener) => subscribe(IPC.settingsChanged, listener)
+  },
+  packs: {
+    list: () => ipcRenderer.invoke(IPC.packList),
+    select: (id) => ipcRenderer.invoke(IPC.packSelect, id)
+  },
+  secrets: {
+    getStatus: (id) => ipcRenderer.invoke(IPC.secretsGetStatus, id),
+    save: (id, value) => ipcRenderer.invoke(IPC.secretsSave, { id, value }),
+    remove: (id) => ipcRenderer.invoke(IPC.secretsDelete, id)
+  },
   pet: {
-    getVisible: () => ipcRenderer.invoke(IPC.petGetVisible),
     setVisible: (visible) => ipcRenderer.invoke(IPC.petSetVisible, visible),
-    onVisibleChange: (listener) => subscribe(IPC.petVisibleChanged, listener),
     getSprite: () => ipcRenderer.invoke(IPC.petGetSprite),
+    onSpriteChange: (listener) => subscribe(IPC.petSpriteChanged, listener),
     getMotion: () => ipcRenderer.invoke(IPC.petGetMotion),
     onMotionChange: (listener) => subscribe(IPC.petMotionChanged, listener),
     openMainWindow: () => ipcRenderer.invoke(IPC.petOpenMainWindow),

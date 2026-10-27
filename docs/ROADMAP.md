@@ -67,14 +67,14 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
   - [x] 팩 에셋 로딩: `protocol.registerSchemesAsPrivileged` + `protocol.handle('pack')`, 팩 루트 밖 경로 차단(path traversal), CSP `img-src` / `media-src`에 `pack:` 추가
   - [x] `packs/_example` 예제 팩 (직접 그린 임시 그림, CC0)
 - 메인 창
-  - [ ] 사이드바 + 페이지 레이아웃: 홈 / 버스 / 대화 / 펫 / 설정 (내용은 빈 페이지)
+  - [x] 사이드바 + 페이지 레이아웃: 홈 / 버스 / 대화 / 펫 / 설정 (내용은 빈 페이지)
 - 창 간 동기화
-  - [ ] 메인 프로세스 → 각 창 브로드캐스트 채널 (설정 변경, 펫 표시 여부, 선택한 팩)
+  - [x] 메인 프로세스 → 각 창 브로드캐스트 채널 (설정 변경, 펫 표시 여부, 선택한 팩)
   - [x] 프로세스 경계 import 제한 (Biome override): 렌더러는 `@main/*` 금지·`@preload/api`는 `import type`만, preload는 `@main/*`·`@renderer/*` 금지, 메인은 `@renderer/*` 금지·`@preload/*`는 `channels`·`api`만
 - 설정 · 키 저장 인프라
-  - [ ] `userData/settings.json` (일반 설정, 평문)
-  - [ ] `userData/secrets.json` (`safeStorage` 암호화) — 앱 `ready` 이후 사용, 암호화를 쓸 수 없으면 평문 저장하지 않고 저장 거부
-  - [ ] 키 폼 컴포넌트: 저장 / 삭제 / "저장됨 (끝자리 abcd)" 표시 — 키는 저장 시 한 번만 메인으로 전달, 원문을 돌려주는 IPC 없음
+  - [x] `userData/settings.json` (일반 설정, 평문)
+  - [x] `userData/secrets.json` (`safeStorage` 암호화) — 앱 `ready` 이후 사용, 암호화를 쓸 수 없으면 평문 저장하지 않고 저장 거부
+  - [x] 키 폼 컴포넌트: 저장 / 삭제 / "저장됨 (끝자리 abcd)" 표시 — 키는 저장 시 한 번만 메인으로 전달, 원문을 돌려주는 IPC 없음
   - 버스 키 연결은 Phase 2, LLM 키 연결은 Phase 4
 
 **완료 조건**
@@ -225,12 +225,12 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 
 **API 키**
 - [ ] 키는 메인 프로세스에서만 복호화·사용. 렌더러에 원문을 돌려주는 IPC(`getSecret` 등) 없음, 테스트 호출도 메인에서 저장된 키로
-- [ ] `safeStorage`를 쓸 수 없으면 저장 거부 (평문 저장 금지)
+- [x] `safeStorage`를 쓸 수 없으면 저장 거부 (평문 저장 금지)
 - [ ] `.env`에 `MAIN_VITE_` 키 금지 (빌드 결과물에 포함됨)
 - [ ] 로그·에러 메시지에서 키 마스킹 (특히 URL에 키가 붙는 공공데이터포털 `serviceKey`)
 - [ ] Gemini 키는 쿼리 파라미터가 아닌 헤더(`x-goog-api-key`)로 전송
 - [ ] 대전 버스 API https 지원 여부 확인 → 지원 시 https 사용
-- [ ] 설정에 키 삭제 기능
+- [x] 설정에 키 삭제 기능
 
 **콘텐츠 · LLM**
 - [ ] LLM 답변·외부 API 응답은 텍스트로 렌더링 (HTML 렌더링 금지, 마크다운은 sanitize 후)
