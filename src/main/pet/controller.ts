@@ -1,6 +1,8 @@
 import { handle } from '@main/ipc'
 import { showMainWindow } from '@main/mainWindow'
 import { forEachOverlay, onOverlaysSynced, setOverlaysIgnoreMouse } from '@main/overlayWindows'
+import { toPetSprite } from '@main/pack/library'
+import type { PackManifest } from '@main/pack/schema'
 import {
   type Lane,
   type MotionConfig,
@@ -10,12 +12,21 @@ import {
   startActivity
 } from '@main/pet/motion'
 import { isPetVisible, setPetVisible } from '@main/pet/visibility'
-import type { PetMotion } from '@preload/api'
+import type { PetMotion, PetSprite } from '@preload/api'
 import { IPC } from '@preload/channels'
-import { BrowserWindow, Menu, type Point, powerMonitor, type Rectangle, screen } from 'electron'
+import {
+  BrowserWindow,
+  Menu,
+  type Point,
+  powerMonitor,
+  type Rectangle,
+  type Size,
+  screen
+} from 'electron'
 import { z } from 'zod'
 
-const PET_SIZE = 64
+/** 팩을 못 읽었을 때 임시 사각형 크기 */
+const FALLBACK_SIZE: Size = { width: 64, height: 64 }
 const HOVER_POLL_MS = 50
 const FIRST_IDLE_MS = 1000
 const MOTION_CONFIG: MotionConfig = {
@@ -26,16 +37,18 @@ const MOTION_CONFIG: MotionConfig = {
 
 /** 펫이 다니는 주 모니터 작업 영역 (전역 DIP) */
 let area: Rectangle
+let sprite: PetSprite | null
+let size: Size
 let plan: MotionPlan
 let segmentTimer: NodeJS.Timeout | undefined
 let cursorOverPet = false
 
 function laneOf(rect: Rectangle): Lane {
-  return { minX: rect.x, maxX: rect.x + rect.width - PET_SIZE }
+  return { minX: rect.x, maxX: rect.x + rect.width - size.width }
 }
 
 function floorOf(rect: Rectangle): number {
-  return rect.y + rect.height - PET_SIZE
+  return rect.y + rect.height - size.height
 }
 
 function toOverlayMotion(bounds: Rectangle): PetMotion {
@@ -43,7 +56,7 @@ function toOverlayMotion(bounds: Rectangle): PetMotion {
   return {
     activity: plan.activity,
     direction: plan.direction,
-    size: PET_SIZE,
+    ...size,
     y: floorOf(area) - bounds.y,
     startX: plan.startX - bounds.x,
     minX: lane.minX - bounds.x,
@@ -88,7 +101,7 @@ function syncWithOverlays(): void {
 function isOverPet(point: Point, now: number): boolean {
   const x = positionAt(plan, laneOf(area), now)
   const y = floorOf(area)
-  return point.x >= x && point.x < x + PET_SIZE && point.y >= y && point.y < y + PET_SIZE
+  return point.x >= x && point.x < x + size.width && point.y >= y && point.y < y + size.height
 }
 
 function pollCursor(): void {
@@ -106,6 +119,7 @@ function showPetMenu(window: BrowserWindow | null): void {
 }
 
 function registerPetIpc(): void {
+  handle(IPC.petGetSprite, { allow: ['overlay'], payload: z.undefined() }, () => sprite)
   handle(IPC.petGetMotion, { allow: ['overlay'], payload: z.undefined() }, (_, event) => {
     const window = BrowserWindow.fromWebContents(event.sender)
     return window ? toOverlayMotion(window.getBounds()) : null
@@ -116,7 +130,11 @@ function registerPetIpc(): void {
   )
 }
 
-export function startPet(): void {
+export function startPet(pack: PackManifest | null): void {
+  sprite = pack && toPetSprite(pack)
+  size = sprite
+    ? { width: sprite.frameWidth * sprite.scale, height: sprite.frameHeight * sprite.scale }
+    : FALLBACK_SIZE
   area = screen.getPrimaryDisplay().workArea
   const lane = laneOf(area)
   const center = (lane.minX + lane.maxX) / 2

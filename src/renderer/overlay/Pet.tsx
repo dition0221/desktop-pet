@@ -1,5 +1,6 @@
-import { usePetMotion } from '@renderer/overlay/hooks/usePetMotion'
-import { useRef } from 'react'
+import type { PetSprite } from '@preload/api'
+import { usePetAnimation } from '@renderer/overlay/hooks/usePetAnimation'
+import { useEffect, useRef, useState } from 'react'
 
 const REACTION_KEYFRAMES: Keyframe[] = [
   { transform: 'scale(1, 1)' },
@@ -8,11 +9,16 @@ const REACTION_KEYFRAMES: Keyframe[] = [
   { transform: 'scale(1, 1)' }
 ]
 
-/** TODO(R3) — 팩 스프라이트로 교체 */
 function Pet(): React.JSX.Element {
   const petRef = useRef<HTMLButtonElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
-  usePetMotion(petRef)
+  // undefined = 불러오는 중, null = 팩을 못 읽어 임시 사각형
+  const [sprite, setSprite] = useState<PetSprite | null>()
+  usePetAnimation(petRef, bodyRef, sprite)
+
+  useEffect(() => {
+    void window.api.pet.getSprite().then(setSprite, () => setSprite(null))
+  }, [])
 
   const react = (): void => {
     bodyRef.current?.animate(REACTION_KEYFRAMES, { duration: 300, easing: 'ease-out' })
@@ -33,12 +39,20 @@ function Pet(): React.JSX.Element {
       onContextMenu={showContextMenu}
       className="group absolute top-0 left-0 size-0 will-change-transform"
     >
-      <div
-        ref={bodyRef}
-        className="relative size-full origin-bottom rounded-lg bg-sky-400/90 group-data-[activity=walking]:animate-pet-walk group-data-[direction=-1]:-scale-x-100"
-      >
-        <span className="absolute top-4 right-3 size-2 rounded-full bg-neutral-800" />
-      </div>
+      {sprite && (
+        // 시트 전체 크기를 몰라도 배율을 적용하려고 background-size 대신 zoom
+        <div
+          ref={bodyRef}
+          className="origin-bottom [image-rendering:pixelated] group-data-[direction=-1]:-scale-x-100"
+          style={{
+            width: sprite.frameWidth,
+            height: sprite.frameHeight,
+            zoom: sprite.scale,
+            backgroundImage: `url("${sprite.url}")`
+          }}
+        />
+      )}
+      {sprite === null && <div ref={bodyRef} className="size-full rounded-lg bg-sky-400/90" />}
     </button>
   )
 }
