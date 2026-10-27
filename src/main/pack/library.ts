@@ -1,4 +1,4 @@
-import { readFile, realpath, stat } from 'node:fs/promises'
+import { readdir, realpath, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   framesFitSheet,
@@ -7,10 +7,11 @@ import {
   packManifestSchema
 } from '@main/pack/schema'
 import { isInsideRoot, resolveInsideRoot } from '@main/safePath'
-import type { PetSprite } from '@preload/api'
+import { readJsonFile } from '@main/store/jsonFile'
+import type { PackSummary, PetSprite } from '@preload/api'
 import { app, nativeImage } from 'electron'
 
-/** TODO(R4) — 설정에서 고른 팩 */
+/** 고른 팩을 못 읽을 때 쓰는 동봉 팩 */
 export const DEFAULT_PACK_ID = '_example'
 
 const MANIFEST_FILE = 'pack.json'
@@ -52,9 +53,7 @@ export async function loadPack(id: string): Promise<PackManifest | null> {
     return null
   }
   try {
-    // 메모장·PowerShell 5.1은 UTF-8 BOM을 붙여 저장한다
-    const raw = (await readFile(join(dir, MANIFEST_FILE), 'utf8')).replace(/^﻿/, '')
-    const manifest = packManifestSchema.parse(JSON.parse(raw))
+    const manifest = packManifestSchema.parse(await readJsonFile(join(dir, MANIFEST_FILE)))
     if (manifest.id !== id) throw new Error(`id mismatch: ${manifest.id}`)
 
     const image = await resolvePackFile(dir, manifest.sprite.image)
@@ -66,6 +65,20 @@ export async function loadPack(id: string): Promise<PackManifest | null> {
     console.error(`[pack] ${id}: invalid pack`, error)
     return null
   }
+}
+
+/** 읽을 수 있는 팩만 — 같은 id는 앞쪽 루트 것 하나 */
+export async function listPacks(): Promise<PackSummary[]> {
+  const packs = new Map<string, PackSummary>()
+  for (const root of packRoots()) {
+    const entries = await readdir(root, { withFileTypes: true }).catch(() => [])
+    for (const entry of entries) {
+      if (!entry.isDirectory() || packs.has(entry.name)) continue
+      const manifest = await loadPack(entry.name)
+      if (manifest) packs.set(manifest.id, { id: manifest.id, name: manifest.name })
+    }
+  }
+  return [...packs.values()].sort((a, b) => a.name.localeCompare(b.name, 'ko'))
 }
 
 export function toPetSprite(manifest: PackManifest): PetSprite {

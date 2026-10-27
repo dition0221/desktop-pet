@@ -82,6 +82,17 @@ function isSameRect(a: Rectangle, b: Rectangle): boolean {
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
 }
 
+/** 작업 영역이나 펫 크기가 바뀌면 레인도 바뀜 — 지금 위치에서 하던 활동을 이어 간다 */
+function replan(change: () => void): void {
+  const now = Date.now()
+  const x = positionAt(plan, laneOf(area), now)
+  change()
+  const remainingMs = Math.max(0, plan.activityEndsAt - now)
+  schedule(
+    startActivity(plan.activity, x, plan.direction, laneOf(area), now, remainingMs, MOTION_CONFIG)
+  )
+}
+
 function syncWithOverlays(): void {
   // 새로 만든 오버레이는 클릭 통과로 시작 — 다음 폴링이 hover를 다시 적용하게 리셋
   cursorOverPet = false
@@ -89,13 +100,16 @@ function syncWithOverlays(): void {
 
   const workArea = screen.getPrimaryDisplay().workArea
   if (isSameRect(workArea, area)) return
-  const now = Date.now()
-  const x = positionAt(plan, laneOf(area), now)
-  area = workArea
-  const remainingMs = Math.max(0, plan.activityEndsAt - now)
-  schedule(
-    startActivity(plan.activity, x, plan.direction, laneOf(area), now, remainingMs, MOTION_CONFIG)
-  )
+  replan(() => {
+    area = workArea
+  })
+}
+
+function applyPack(pack: PackManifest | null): void {
+  sprite = pack && toPetSprite(pack)
+  size = sprite
+    ? { width: sprite.frameWidth * sprite.scale, height: sprite.frameHeight * sprite.scale }
+    : FALLBACK_SIZE
 }
 
 function isOverPet(point: Point, now: number): boolean {
@@ -130,11 +144,15 @@ function registerPetIpc(): void {
   )
 }
 
+export function setPetPack(pack: PackManifest): void {
+  replan(() => {
+    applyPack(pack)
+    forEachOverlay((window) => window.webContents.send(IPC.petSpriteChanged, sprite))
+  })
+}
+
 export function startPet(pack: PackManifest | null): void {
-  sprite = pack && toPetSprite(pack)
-  size = sprite
-    ? { width: sprite.frameWidth * sprite.scale, height: sprite.frameHeight * sprite.scale }
-    : FALLBACK_SIZE
+  applyPack(pack)
   area = screen.getPrimaryDisplay().workArea
   const lane = laneOf(area)
   const center = (lane.minX + lane.maxX) / 2
