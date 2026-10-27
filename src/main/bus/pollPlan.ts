@@ -6,7 +6,8 @@ export type ActiveHours = BusPollSettings['activeHours']
 /** 대전 시내버스 첫차·막차 무렵 */
 export const DEFAULT_BUS_POLL: BusPollSettings = {
   intervalSec: 60,
-  activeHours: { start: '05:30', end: '23:30' }
+  activeHours: { start: '05:30', end: '23:30' },
+  alertMinutes: 5
 }
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -19,7 +20,10 @@ export const busPollSettingsSchema = z.object({
   activeHours: z.object({
     start: z.string().regex(TIME_PATTERN),
     end: z.string().regex(TIME_PATTERN)
-  })
+  }),
+  alertMinutes: z
+    .union([z.literal(3), z.literal(5), z.literal(10), z.literal(15)])
+    .default(DEFAULT_BUS_POLL.alertMinutes)
 }) satisfies z.ZodType<BusPollSettings>
 
 export function minutesOfDay(time: string): number {

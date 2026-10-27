@@ -60,7 +60,8 @@ export const busStopSchema = z.object({
 
 export const busFavoriteSchema = z.object({
   stop: busStopSchema,
-  route: z.object({ id: z.string().regex(TAGO_ID_PATTERN), number: z.string().max(16) }).nullable()
+  route: z.object({ id: z.string().regex(TAGO_ID_PATTERN), number: z.string().max(16) }).nullable(),
+  alert: z.boolean().default(false)
 }) satisfies z.ZodType<BusFavorite>
 
 /** 빈 문자열·null 좌표는 coerce가 0으로 바꾸므로 범위 검사로 거른다 */

@@ -1,3 +1,4 @@
+import { alertText, findDueAlerts, type SentAlert } from '@main/bus/alerts'
 import { stopArrivals } from '@main/bus/client'
 import {
   backoffMs,
@@ -8,6 +9,7 @@ import {
 } from '@main/bus/pollPlan'
 import { broadcast } from '@main/ipc'
 import { isMainWindowVisible, onMainWindowVisibilityChange } from '@main/mainWindow'
+import { sayToPet } from '@main/pet/speech'
 import { onSecretChange } from '@main/store/secrets'
 import { getSettings, onSettingsChange } from '@main/store/settings'
 import type { ArrivalPollStatus, ArrivalsSnapshot, BusErrorCode } from '@preload/api'
@@ -25,9 +27,27 @@ let failures = 0
 let quotaBlockedUntil = 0
 let keyBlocked = false
 let polling = false
+let sentAlerts: SentAlert[] = []
 
-function favoriteStopIds(): string[] {
-  return [...new Set(getSettings().busFavorites.map((favorite) => favorite.stop.id))]
+/** 메인 창이 보이면 모든 즐겨찾기, 닫혀 있으면 알림을 켠 즐겨찾기만 */
+function watchedStopIds(): string[] {
+  const visible = isMainWindowVisible()
+  const favorites = getSettings().busFavorites.filter((favorite) => visible || favorite.alert)
+  return [...new Set(favorites.map((favorite) => favorite.stop.id))]
+}
+
+function announceDueAlerts(): void {
+  const { busFavorites, busPoll } = getSettings()
+  const now = Date.now()
+  const { due, sent } = findDueAlerts({
+    favorites: busFavorites,
+    stops: snapshot.stops,
+    now,
+    alertMinutes: busPoll.alertMinutes,
+    sent: sentAlerts
+  })
+  sentAlerts = sent
+  for (const alert of due) sayToPet(alertText(alert, now))
 }
 
 function publish(status: ArrivalPollStatus, nextPollAt: number | null): void {
@@ -48,7 +68,8 @@ function clearArrivals(): void {
 /** 즐겨찾기·설정·키·창 표시 상태가 바뀔 때마다 다음 할 일을 다시 정한다 */
 function schedule(): void {
   clearTimeout(timer)
-  const stopIds = favoriteStopIds()
+  const stopIds = watchedStopIds()
+  // 지켜보지 않는 정류소 결과는 버린다 — 다시 지켜보면 새 정류소로 보고 바로 조회한다
   snapshot = {
     ...snapshot,
     stops: Object.fromEntries(
@@ -57,9 +78,10 @@ function schedule(): void {
   }
 
   const now = Date.now()
-  if (!isMainWindowVisible()) publish('idle', null)
-  else if (stopIds.length === 0) publish('no-favorites', null)
-  else if (keyBlocked) publish('key-error', null)
+  if (stopIds.length === 0) {
+    const noFavorites = isMainWindowVisible() && getSettings().busFavorites.length === 0
+    publish(noFavorites ? 'no-favorites' : 'idle', null)
+  } else if (keyBlocked) publish('key-error', null)
   else if (quotaBlockedUntil > now) {
     clearArrivals()
     waitThen('quota-exceeded', quotaBlockedUntil - now, schedule)
@@ -95,15 +117,17 @@ function scheduleNextPoll(stopIds: string[], now: number): void {
 }
 
 async function poll(stopIds: string[]): Promise<void> {
-  // 타이머를 잡은 뒤 운행 시간이 끝났거나 창이 가려졌으면 부르지 않는다
+  // 타이머를 잡은 뒤 운행 시간이 끝났거나 지켜볼 정류소가 바뀌었으면 다시 정한다
   const { activeHours } = getSettings().busPoll
-  if (polling || !isMainWindowVisible() || !isWithinActiveHours(new Date(), activeHours)) {
+  const watched = watchedStopIds()
+  const stillWatched = stopIds.every((stopId) => watched.includes(stopId))
+  if (polling || !stillWatched || !isWithinActiveHours(new Date(), activeHours)) {
     if (!polling) schedule()
     return
   }
 
   polling = true
-  const isFullCycle = stopIds.length === favoriteStopIds().length
+  const isFullCycle = stopIds.length === watched.length
   try {
     const results = await Promise.all(
       stopIds.map(async (stopId) => [stopId, await stopArrivals(stopId)] as const)
@@ -130,6 +154,7 @@ async function poll(stopIds: string[]): Promise<void> {
     }
     snapshot = { ...snapshot, stops }
     failures = results.every(([, result]) => !result.ok) ? failures + 1 : 0
+    announceDueAlerts()
   } finally {
     polling = false
     schedule()
