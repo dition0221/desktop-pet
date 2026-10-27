@@ -1,5 +1,5 @@
-import { is } from '@electron-toolkit/utils'
-import { toAllowedExternalUrl } from '@main/external-url'
+import { DEV_SERVER_URL, isAppPageUrl } from '@main/appPage'
+import { toAllowedExternalUrl } from '@main/externalUrl'
 import { app, session, shell, type WebPreferences } from 'electron'
 
 export const secureWebPreferences = {
@@ -12,13 +12,7 @@ export const secureWebPreferences = {
 
 /** 개발 모드 HMR 전체 새로고침만 허용 */
 function isAllowedNavigation(rawUrl: string): boolean {
-  const devUrl = process.env.ELECTRON_RENDERER_URL
-  if (!is.dev || !devUrl) return false
-  try {
-    return new URL(rawUrl).origin === new URL(devUrl).origin
-  } catch {
-    return false
-  }
+  return DEV_SERVER_URL !== undefined && isAppPageUrl(rawUrl)
 }
 
 /** Electron 기본값은 카메라·마이크 등 모든 권한 자동 허용 — app ready 이후 호출 */
