@@ -7,8 +7,20 @@ const ROUTE_612 = { id: 'DJB30300076', number: '612' }
 const FAVORITE: BusFavorite = { stop: STOP, route: ROUTE_612, alert: true }
 const MINUTE = 60_000
 
-function arrival(secondsLeft: number, routeId = ROUTE_612.id): BusArrival {
-  return { routeId, routeNumber: '612', routeType: null, secondsLeft, stopsLeft: 3 }
+function arrival(
+  secondsLeft: number,
+  routeId = ROUTE_612.id,
+  vehicleId: string | null = null
+): BusArrival {
+  return {
+    routeId,
+    routeNumber: '612',
+    routeType: null,
+    secondsLeft,
+    stopsLeft: 3,
+    vehicleId,
+    destination: null
+  }
 }
 
 /** 조회한 시각(now)에 받은 응답이라고 보고 판정한다 */
@@ -57,6 +69,22 @@ describe('findDueAlerts', () => {
     }
   })
 
+  it('차량 번호가 있으면 붙어 오는 다른 차량도 따로 알리고, 같은 차량은 다시 알리지 않는다', () => {
+    const first = check({ arrivals: [arrival(240, ROUTE_612.id, '대전75자1111')] })
+    const sameCar = check({
+      arrivals: [arrival(500, ROUTE_612.id, '대전75자1111')],
+      now: MINUTE,
+      sent: first.sent
+    })
+    expect(sameCar.due).toEqual([])
+    const nextCar = check({
+      arrivals: [arrival(200, ROUTE_612.id, '대전75자2222')],
+      now: 5 * MINUTE,
+      sent: first.sent
+    })
+    expect(nextCar.due).toHaveLength(1)
+  })
+
   it('다음 버스는 다시 알린다', () => {
     const first = check({ arrivals: [arrival(240)] })
     const next = check({ arrivals: [arrival(200)], now: 10 * MINUTE, sent: first.sent })
@@ -71,7 +99,7 @@ describe('findDueAlerts', () => {
   })
 
   it('오래된 알림 기록은 정리한다', () => {
-    const sent = [{ stopId: STOP.id, routeId: ROUTE_612.id, expectedAt: 0 }]
+    const sent = [{ stopId: STOP.id, routeId: ROUTE_612.id, vehicleId: null, expectedAt: 0 }]
     expect(check({ arrivals: [], now: 60 * MINUTE, sent }).sent).toEqual([])
   })
 })

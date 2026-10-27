@@ -1,6 +1,6 @@
 import type { BusArrival, BusFavorite, StopArrivals } from '@preload/api'
 
-/** 응답마다 예정 시각이 조금씩 흔들림 — 이 안이면 같은 버스로 본다 */
+/** 차량 번호가 없을 때 — 응답마다 예정 시각이 조금씩 흔들려 이 안이면 같은 버스로 본다 */
 const SAME_BUS_WINDOW_MS = 3 * 60_000
 /** 예정 시각이 이만큼 지난 알림 기록은 버린다 */
 const SENT_ALERT_TTL_MS = 15 * 60_000
@@ -14,6 +14,8 @@ export interface DueAlert {
 export interface SentAlert {
   stopId: string
   routeId: string
+  /** 차량 번호를 알면 몇 분 차이로 붙어 오는 같은 노선 버스도 따로 알린다 */
+  vehicleId: string | null
   expectedAt: number
 }
 
@@ -45,13 +47,14 @@ function nextBuses(
   })
 }
 
+function isSameBus(alert: SentAlert, bus: NextBus): boolean {
+  if (alert.stopId !== bus.favorite.stop.id || alert.routeId !== bus.routeId) return false
+  if (alert.vehicleId && bus.arrival.vehicleId) return alert.vehicleId === bus.arrival.vehicleId
+  return Math.abs(alert.expectedAt - bus.expectedAt) < SAME_BUS_WINDOW_MS
+}
+
 function findSent(sent: SentAlert[], bus: NextBus): SentAlert | undefined {
-  return sent.find(
-    (alert) =>
-      alert.stopId === bus.favorite.stop.id &&
-      alert.routeId === bus.routeId &&
-      Math.abs(alert.expectedAt - bus.expectedAt) < SAME_BUS_WINDOW_MS
-  )
+  return sent.find((alert) => isSameBus(alert, bus))
 }
 
 /** N분 안으로 들어온 버스를 한 번만 알린다 — 이미 알린 버스는 최신 예측으로 기록을 옮겨 흔들림이 쌓이지 않게 한다 */
@@ -76,7 +79,12 @@ export function findDueAlerts(options: {
     }
     if (bus.expectedAt - now > alertMinutes * 60_000) continue
     due.push({ favorite: bus.favorite, arrival: bus.arrival, expectedAt: bus.expectedAt })
-    sent.push({ stopId: bus.favorite.stop.id, routeId: bus.routeId, expectedAt: bus.expectedAt })
+    sent.push({
+      stopId: bus.favorite.stop.id,
+      routeId: bus.routeId,
+      vehicleId: bus.arrival.vehicleId,
+      expectedAt: bus.expectedAt
+    })
   }
   return { due, sent }
 }
