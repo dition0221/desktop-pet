@@ -1,10 +1,11 @@
 import { loadAppPage, PRELOAD_PATH } from '@main/appPage'
 import { registerWindowRole } from '@main/ipc'
-import { isPetVisible, onPetVisibleChange } from '@main/petVisibility'
+import { isPetVisible, onPetVisibleChange } from '@main/pet/visibility'
 import { secureWebPreferences } from '@main/security'
 import { BrowserWindow, type Display, screen } from 'electron'
 
 const overlayWindowsByDisplayId = new Map<number, BrowserWindow>()
+const syncedListeners = new Set<() => void>()
 
 /** TODO(Phase 3) — 다중 모니터: 모든 디스플레이 */
 function targetDisplays(): Display[] {
@@ -33,7 +34,7 @@ function createOverlayWindow(display: Display): BrowserWindow {
     }
   })
   registerWindowRole(window, 'overlay')
-  // forward 옵션은 Windows에서 아래 창 커서를 깜빡이게 함 — 펫 hover 판정은 메인이 커서 좌표로 (R2)
+  // forward 옵션은 Windows에서 아래 창 커서를 깜빡이게 함 — 펫 위인지는 pet/controller가 커서 좌표로 판정
   window.setIgnoreMouseEvents(true)
 
   window.once('ready-to-show', () => {
@@ -64,6 +65,8 @@ function syncOverlayWindows(): void {
     if (window) window.setBounds(display.workArea)
     else overlayWindowsByDisplayId.set(display.id, createOverlayWindow(display))
   }
+
+  for (const listener of syncedListeners) listener()
 }
 
 function setOverlaysVisible(visible: boolean): void {
@@ -71,6 +74,19 @@ function setOverlaysVisible(visible: boolean): void {
     if (visible) window.showInactive()
     else window.hide()
   }
+}
+
+export function forEachOverlay(callback: (window: BrowserWindow) => void): void {
+  for (const window of overlayWindowsByDisplayId.values()) callback(window)
+}
+
+/** 디스플레이 변경으로 창을 만들거나 옮긴 뒤 호출 — 창 bounds가 이미 새 값이다 */
+export function onOverlaysSynced(listener: () => void): void {
+  syncedListeners.add(listener)
+}
+
+export function setOverlaysIgnoreMouse(ignore: boolean): void {
+  for (const window of overlayWindowsByDisplayId.values()) window.setIgnoreMouseEvents(ignore)
 }
 
 export function startOverlayWindows(): void {

@@ -3,7 +3,8 @@ import { DEV_SERVER_URL } from '@main/appPage'
 import { handleAppProtocol, registerAppScheme } from '@main/appProtocol'
 import { createMainWindow, showMainWindow } from '@main/mainWindow'
 import { startOverlayWindows } from '@main/overlayWindows'
-import { registerPetVisibilityIpc } from '@main/petVisibility'
+import { startPet } from '@main/pet/controller'
+import { registerPetVisibilityIpc } from '@main/pet/visibility'
 import { denyAllPermissions, registerWebContentsGuards } from '@main/security'
 import { createTray } from '@main/tray'
 import { app, Menu } from 'electron'
@@ -43,6 +44,7 @@ function bootstrap(): void {
     registerPetVisibilityIpc()
     createMainWindow()
     startOverlayWindows()
+    startPet()
     createTray()
   })
 }
