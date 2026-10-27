@@ -80,13 +80,57 @@ export interface BusStopSearch {
 
 export type AddFavoriteResult = { ok: true } | { ok: false; reason: 'limit'; limit: number }
 
-export type BusApiName = 'stop' | 'route' | 'arrival' | 'location'
+export interface BusArrival {
+  routeId: string
+  routeNumber: string
+  /** 응답을 받은 시각(`StopArrivals.updatedAt`) 기준 남은 시간 */
+  secondsLeft: number
+  stopsLeft: number | null
+  /** 차량 번호 — 같은 버스를 알아보는 데 쓴다 */
+  vehicleId: string | null
+  /** 행선지 — 같은 노선의 방향을 구분한다 */
+  destination: string | null
+}
+
+export interface StopArrivals {
+  arrivals: BusArrival[]
+  /** 마지막으로 성공한 시각 — 실패해도 이전 결과는 남긴다 */
+  updatedAt: number | null
+  error: BusErrorCode | null
+}
+
+/** idle = 볼 창이 없어 쉼, backoff = 연속 실패로 간격을 늘림, key-error = 키를 바꿀 때까지 멈춤 */
+export type ArrivalPollStatus =
+  | 'idle'
+  | 'polling'
+  | 'no-favorites'
+  | 'outside-hours'
+  | 'quota-exceeded'
+  | 'backoff'
+  | 'key-error'
+
+export interface ArrivalsSnapshot {
+  status: ArrivalPollStatus
+  /** 정류소 ID별 */
+  stops: Record<string, StopArrivals>
+  nextPollAt: number | null
+}
+
+export interface BusPollSettings {
+  intervalSec: 30 | 60 | 120 | 300
+  /** `HH:MM` — end가 start보다 이르면 자정을 넘는다 */
+  activeHours: { start: string; end: string }
+}
+
+/** stop·route는 TAGO, arrival은 대전시 도착정보 */
+export type BusApiName = 'stop' | 'route' | 'arrival'
 
 /** userData/settings.json — 키는 secrets.json에 따로 */
 export interface Settings {
   petVisible: boolean
   packId: string
   busFavorites: BusFavorite[]
+  busPoll: BusPollSettings
 }
 
 export interface PackSummary {
@@ -141,6 +185,10 @@ export interface DesktopPetApi {
     addFavorite(favorite: BusFavorite): Promise<AddFavoriteResult>
     /** routeId가 null이면 정류소 즐겨찾기 */
     removeFavorite(stopId: string, routeId: string | null): Promise<void>
+    /** 즐겨찾기 정류소 도착 정보 — 메인 창이 보이는 동안만 메인이 주기적으로 갱신한다 */
+    getArrivals(): Promise<ArrivalsSnapshot>
+    onArrivalsChange(listener: (snapshot: ArrivalsSnapshot) => void): () => void
+    setPollSettings(settings: BusPollSettings): Promise<void>
   }
   pet: {
     /** 메인 창에서만 허용 — 현재 값은 settings.petVisible */

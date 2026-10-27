@@ -3,8 +3,24 @@ import { registerWindowRole } from '@main/ipc'
 import { secureWebPreferences } from '@main/security'
 import { app, BrowserWindow } from 'electron'
 
+type VisibilityListener = (visible: boolean) => void
+
 let mainWindow: BrowserWindow | null = null
 let quitting = false
+const visibilityListeners = new Set<VisibilityListener>()
+
+export function isMainWindowVisible(): boolean {
+  return Boolean(mainWindow?.isVisible() && !mainWindow.isMinimized())
+}
+
+export function onMainWindowVisibilityChange(listener: VisibilityListener): void {
+  visibilityListeners.add(listener)
+}
+
+function notifyVisibility(): void {
+  const visible = isMainWindowVisible()
+  for (const listener of visibilityListeners) listener(visible)
+}
 
 export function createMainWindow(): void {
   const window = new BrowserWindow({
@@ -37,8 +53,14 @@ export function createMainWindow(): void {
     quitting = true
   })
 
+  window.on('show', notifyVisibility)
+  window.on('hide', notifyVisibility)
+  window.on('minimize', notifyVisibility)
+  window.on('restore', notifyVisibility)
+
   window.on('closed', () => {
     mainWindow = null
+    notifyVisibility()
   })
 
   void loadAppPage(window, 'index')

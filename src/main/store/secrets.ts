@@ -16,6 +16,7 @@ const secretValueSchema = z.string().trim().min(1).max(1024)
 type EncryptedSecrets = Record<string, string>
 
 let writing: Promise<unknown> = Promise.resolve()
+const changeListeners = new Set<(id: SecretId) => void>()
 
 /** 파일이 없을 때만 빈 값 — 깨진 파일을 빈 값으로 읽고 덮어쓰면 다른 키가 사라진다 */
 async function readEncrypted(): Promise<EncryptedSecrets> {
@@ -60,6 +61,7 @@ export async function saveSecret(id: SecretId, value: string): Promise<SaveSecre
   await mutate((secrets) => {
     secrets[id] = encrypted
   })
+  notifyChange(id)
   return { ok: true, status: { saved: true, last4: value.slice(-4) } }
 }
 
@@ -67,7 +69,17 @@ export async function deleteSecret(id: SecretId): Promise<SecretStatus> {
   await mutate((secrets) => {
     delete secrets[id]
   })
+  notifyChange(id)
   return NOT_SAVED
+}
+
+/** 키 값은 넘기지 않고 어떤 키가 바뀌었는지만 알린다 */
+export function onSecretChange(listener: (id: SecretId) => void): void {
+  changeListeners.add(listener)
+}
+
+function notifyChange(id: SecretId): void {
+  for (const listener of changeListeners) listener(id)
 }
 
 /** 원문을 돌려주는 채널은 두지 않는다 — 키는 메인 프로세스 안에서만 복호화 */

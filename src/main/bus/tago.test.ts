@@ -1,14 +1,5 @@
-import {
-  isKnownTagoError,
-  maskServiceKey,
-  normalizeServiceKey,
-  parseTagoPage,
-  routeItemSchema,
-  routeStopItemSchema,
-  stopItemSchema,
-  TagoError,
-  toBusErrorCode
-} from '@main/bus/tago'
+import { isKnownPortalError, PortalError, toBusErrorCode } from '@main/bus/portal'
+import { parseTagoPage, routeItemSchema, routeStopItemSchema, stopItemSchema } from '@main/bus/tago'
 import { describe, expect, it } from 'vitest'
 
 function envelope(items: unknown, resultCode = '00', totalCount?: number): string {
@@ -71,21 +62,21 @@ describe('parseTagoPage', () => {
     expect(parseTagoPage(envelope({ item: items }), stopItemSchema).items).toEqual([])
   })
 
-  it('결과 코드가 정상이 아니면 TagoError를 던진다', () => {
-    expect(() => parseTagoPage(envelope('', '22'), stopItemSchema)).toThrow(TagoError)
+  it('결과 코드가 정상이 아니면 PortalError를 던진다', () => {
+    expect(() => parseTagoPage(envelope('', '22'), stopItemSchema)).toThrow(PortalError)
   })
 
   it('게이트웨이 XML 오류를 코드로 바꾼다', () => {
     const error = catchError(() => parseTagoPage(GATEWAY_ERROR, stopItemSchema))
     expect(toBusErrorCode(error)).toBe('invalid-key')
-    expect(toBusErrorCode(new TagoError('22', 'LIMITED'))).toBe('quota-exceeded')
+    expect(toBusErrorCode(new PortalError('22', 'LIMITED'))).toBe('quota-exceeded')
     expect(toBusErrorCode(new Error('boom'))).toBe('unknown')
   })
 
   it('형식이 다른 응답은 네트워크 오류가 아니라 알 수 없는 응답으로 분류한다', () => {
     const error = catchError(() => parseTagoPage('{"unexpected":true}', stopItemSchema))
-    expect(error).toBeInstanceOf(TagoError)
-    expect(isKnownTagoError(error as TagoError)).toBe(false)
+    expect(error).toBeInstanceOf(PortalError)
+    expect(isKnownPortalError(error as PortalError)).toBe(false)
     expect(toBusErrorCode(error)).toBe('unknown')
   })
 })
@@ -111,22 +102,5 @@ describe('항목 변환', () => {
   it('노선 경유 정류소는 순서와 상하행을 가진다', () => {
     const stop = { ...STOP, nodeord: 3, updowncd: 1, routeid: 'DJB30300076' }
     expect(routeStopItemSchema.parse(stop)).toMatchObject({ id: 'DJB8001413', order: 3, updown: 1 })
-  })
-})
-
-describe('서비스 키', () => {
-  it('URL 파라미터와 원문·인코딩된 키를 모두 가린다', () => {
-    const key = 'ab+c/d=='
-    const text = `GET https://x/?serviceKey=${encodeURIComponent(key)}&a=1 failed (${key})`
-    const masked = maskServiceKey(text, key)
-    expect(masked).not.toContain(key)
-    expect(masked).not.toContain(encodeURIComponent(key))
-    expect(masked).toContain('serviceKey=***&a=1')
-  })
-
-  it('포털의 Encoding 키는 한 번 디코딩하고 Decoding 키는 그대로 둔다', () => {
-    expect(normalizeServiceKey('ab%2Bc%2Fd%3D%3D')).toBe('ab+c/d==')
-    expect(normalizeServiceKey('ab+c/d==')).toBe('ab+c/d==')
-    expect(normalizeServiceKey('0a1b2c3d')).toBe('0a1b2c3d')
   })
 })

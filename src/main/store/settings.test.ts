@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { DEFAULT_BUS_POLL } from '@main/bus/pollPlan'
 import { getSettings, loadSettings, MAX_BUS_FAVORITES } from '@main/store/settings'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -48,8 +49,18 @@ describe('loadSettings', () => {
   })
 
   it('항목 하나가 잘못돼도 다른 설정은 그대로 읽는다', async () => {
-    writeSettings({ petVisible: false, packId: 'NOT VALID', busFavorites: 'oops' })
+    writeSettings({
+      petVisible: false,
+      packId: 'NOT VALID',
+      busFavorites: 'oops',
+      busPoll: { intervalSec: 5, activeHours: { start: '07:00', end: '07:00' } }
+    })
     await loadSettings()
-    expect(getSettings()).toEqual({ petVisible: false, packId: '_example', busFavorites: [] })
+    expect(getSettings()).toEqual({
+      petVisible: false,
+      packId: '_example',
+      busFavorites: [],
+      busPoll: DEFAULT_BUS_POLL
+    })
   })
 })

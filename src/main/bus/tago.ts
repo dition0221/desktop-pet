@@ -1,56 +1,11 @@
-import type { BusErrorCode, BusFavorite, BusRoute, BusRouteStop, BusStop } from '@preload/api'
+import { gatewayError, PortalError } from '@main/bus/portal'
+import type { BusFavorite, BusRoute, BusRouteStop, BusStop } from '@preload/api'
 import { z } from 'zod'
 
 export const DAEJEON_CITY_CODE = 25
 
 /** TAGO 정류소·노선 ID — 대전은 `DJB` + 숫자 */
 export const TAGO_ID_PATTERN = /^DJB\d{1,12}$/
-
-/** 공공데이터포털 게이트웨이는 `_type=json`이어도 인증 오류를 XML로 돌려준다 */
-const GATEWAY_REASON_PATTERN = /<returnReasonCode>(\d+)<\/returnReasonCode>/
-const GATEWAY_MESSAGE_PATTERN = /<returnAuthMsg>([^<]*)<\/returnAuthMsg>/
-const PERCENT_ENCODED_PATTERN = /%[0-9a-f]{2}/i
-
-const GATEWAY_ERROR_CODES: Record<string, BusErrorCode> = {
-  '20': 'not-allowed',
-  '22': 'quota-exceeded',
-  '30': 'invalid-key',
-  '31': 'invalid-key'
-}
-
-export class TagoError extends Error {
-  constructor(
-    readonly code: string,
-    message: string
-  ) {
-    super(message)
-  }
-}
-
-/** 매핑에 없는 코드는 원인을 찾을 수 있게 호출부가 로그를 남긴다 */
-export function isKnownTagoError(error: TagoError): boolean {
-  return error.code in GATEWAY_ERROR_CODES
-}
-
-export function toBusErrorCode(error: unknown): BusErrorCode {
-  return error instanceof TagoError ? (GATEWAY_ERROR_CODES[error.code] ?? 'unknown') : 'unknown'
-}
-
-/** 로그·에러에 키가 남지 않게 — URL 파라미터와 원문 모두 가린다 */
-export function maskServiceKey(text: string, key: string): string {
-  const masked = text.replace(/serviceKey=[^&\s"']+/gi, 'serviceKey=***')
-  return key ? masked.replaceAll(key, '***').replaceAll(encodeURIComponent(key), '***') : masked
-}
-
-/** 포털의 Encoding 키를 붙여 넣으면 URLSearchParams가 한 번 더 인코딩해 인증에 실패한다 */
-export function normalizeServiceKey(key: string): string {
-  if (!PERCENT_ENCODED_PATTERN.test(key)) return key
-  try {
-    return decodeURIComponent(key)
-  } catch {
-    return key
-  }
-}
 
 const envelopeSchema = z.object({
   response: z.object({
@@ -76,14 +31,13 @@ export function parseTagoPage<T>(text: string, itemSchema: z.ZodType<T>): TagoPa
   try {
     json = JSON.parse(text)
   } catch {
-    const reason = text.match(GATEWAY_REASON_PATTERN)?.[1] ?? 'non-json'
-    throw new TagoError(reason, text.match(GATEWAY_MESSAGE_PATTERN)?.[1] ?? text.slice(0, 200))
+    throw gatewayError(text) ?? new PortalError('non-json', text.slice(0, 200))
   }
 
   const envelope = envelopeSchema.safeParse(json)
-  if (!envelope.success) throw new TagoError('invalid-response', envelope.error.message)
+  if (!envelope.success) throw new PortalError('invalid-response', envelope.error.message)
   const { header, body } = envelope.data.response
-  if (header.resultCode !== '00') throw new TagoError(header.resultCode, header.resultMsg)
+  if (header.resultCode !== '00') throw new PortalError(header.resultCode, header.resultMsg)
   if (!body?.items) return { items: [], totalCount: 0 }
 
   const { item } = body.items

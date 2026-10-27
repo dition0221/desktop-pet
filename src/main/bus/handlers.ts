@@ -1,4 +1,6 @@
+import { getArrivals } from '@main/bus/arrivalPoller'
 import { nearbyStops, routePath, searchStops, stopRoutes, testBusKey } from '@main/bus/client'
+import { busPollSettingsSchema } from '@main/bus/pollPlan'
 import { busFavoriteSchema, TAGO_ID_PATTERN } from '@main/bus/tago'
 import { handle } from '@main/ipc'
 import { getSettings, MAX_BUS_FAVORITES, updateSettings } from '@main/store/settings'
@@ -49,4 +51,8 @@ export function registerBusIpc(): void {
   handle(IPC.busRoutePath, { allow, payload: tagoId }, routePath)
   handle(IPC.busAddFavorite, { allow, payload: busFavoriteSchema }, addFavorite)
   handle(IPC.busRemoveFavorite, { allow, payload: favoriteKey }, removeFavorite)
+  handle(IPC.busGetArrivals, { allow, payload: z.undefined() }, getArrivals)
+  handle(IPC.busSetPollSettings, { allow, payload: busPollSettingsSchema }, (busPoll) =>
+    updateSettings({ busPoll })
+  )
 }
