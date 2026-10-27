@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**", "!pnpm-lock.yaml", "!**/routeTree.gen.ts"]
   },
   "formatter": {
     "enabled": true,
@@ -18,7 +19,16 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "useImportType": "error",
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["camelCase"]
+          }
+        }
+      }
     }
   },
   "javascript": {
@@ -51,6 +61,115 @@
                 ]
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/main/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["./**", "../**", ".", ".."],
+                    "message": "상대경로 대신 @main/*, @preload/*, @renderer/* 별칭을 사용하세요."
+                  },
+                  {
+                    "group": ["@renderer/**"],
+                    "message": "메인 프로세스는 렌더러 코드를 import하지 않습니다."
+                  },
+                  {
+                    "group": ["@preload/**", "!@preload/channels", "!@preload/api"],
+                    "message": "메인 프로세스는 preload 중 @preload/channels, @preload/api만 import합니다."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/preload/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["./**", "../**", ".", ".."],
+                    "message": "상대경로 대신 @main/*, @preload/*, @renderer/* 별칭을 사용하세요."
+                  },
+                  {
+                    "group": ["@main/**", "@renderer/**"],
+                    "message": "preload는 @main/*, @renderer/*를 import하지 않습니다."
+                  },
+                  {
+                    "group": ["node:*"],
+                    "message": "sandbox preload에서는 Node 모듈을 require할 수 없습니다."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/renderer/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["./**", "../**", ".", ".."],
+                    "message": "상대경로 대신 @main/*, @preload/*, @renderer/* 별칭을 사용하세요."
+                  },
+                  {
+                    "group": ["@main/**", "@preload/**", "!@preload/api"],
+                    "message": "렌더러는 @main/*을 import하지 않고, preload는 @preload/api 타입만 import합니다."
+                  },
+                  {
+                    "group": ["electron", "node:*"],
+                    "message": "렌더러는 electron·Node 모듈을 쓸 수 없습니다 — window.api로 메인에 요청하세요."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "filenameCases": ["camelCase", "PascalCase"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/renderer/mainWindow/routes/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
           }
         }
       }
