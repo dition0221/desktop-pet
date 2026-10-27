@@ -46,6 +46,7 @@ const api: DesktopPetApi = {
     getSprite: () => ipcRenderer.invoke(IPC.petGetSprite),
     onSpriteChange: (listener) => subscribe(IPC.petSpriteChanged, listener),
     onSpeech: (listener) => subscribe(IPC.petSpeech, listener),
+    getRecentSpeeches: () => ipcRenderer.invoke(IPC.petGetRecentSpeeches),
     getMotion: () => ipcRenderer.invoke(IPC.petGetMotion),
     onMotionChange: (listener) => subscribe(IPC.petMotionChanged, listener),
     openMainWindow: () => ipcRenderer.invoke(IPC.petOpenMainWindow),

@@ -15,7 +15,6 @@ const coordinates = z.object({
   lng: z.number().min(127).max(127.8)
 })
 const favoriteKey = z.object({ stopId: tagoId, routeId: tagoId.nullable() })
-/** 알림은 노선 즐겨찾기에만 — 정류소 전체 노선을 알리면 말풍선이 쏟아진다 */
 const favoriteAlert = z.object({ stopId: tagoId, routeId: tagoId, enabled: z.boolean() })
 
 function isSameFavorite(favorite: BusFavorite, stopId: string, routeId: string | null): boolean {

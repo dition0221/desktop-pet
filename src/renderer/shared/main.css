@@ -16,14 +16,15 @@
 @theme {
   --animate-bubble-in: bubble-in 180ms ease-out;
 
+  /* translate 속성은 -translate-x-1/2 정렬과 겹쳐 덮어쓰므로 transform으로 움직인다 */
   @keyframes bubble-in {
     from {
       opacity: 0;
-      translate: 0 6px;
+      transform: translateY(6px);
     }
     to {
       opacity: 1;
-      translate: 0 0;
+      transform: none;
     }
   }
 }

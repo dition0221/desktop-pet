@@ -127,6 +127,8 @@ export interface BusPollSettings {
 }
 
 export interface PetSpeech {
+  /** 같은 말풍선을 두 번 띄우지 않게 — 구독과 늦게 가져온 최근 말풍선이 겹칠 수 있다 */
+  id: number
   text: string
   durationMs: number
 }
@@ -209,6 +211,8 @@ export interface DesktopPetApi {
     onSpriteChange(listener: (sprite: PetSprite) => void): () => void
     /** 오버레이 전용 — 버스 도착 알림 등 펫 말풍선 */
     onSpeech(listener: (speech: PetSpeech) => void): () => void
+    /** 오버레이 전용 — 페이지가 뜨기 전에 보낸 말풍선을 놓치지 않게 */
+    getRecentSpeeches(): Promise<PetSpeech[]>
     /** 오버레이에서만 허용 */
     getMotion(): Promise<PetMotion | null>
     onMotionChange(listener: (motion: PetMotion) => void): () => void

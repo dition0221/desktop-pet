@@ -1,21 +1,21 @@
 import type { PetSpeech } from '@preload/api'
 import { useEffect, useState } from 'react'
 
-export interface QueuedSpeech extends PetSpeech {
-  /** 같은 문장이 연달아 와도 말풍선을 새로 띄우도록 붙이는 번호 */
-  id: number
-}
-
 /** 말풍선을 하나씩 차례로 — 지금 보여 줄 것이 없으면 null */
-export function usePetSpeech(): QueuedSpeech | null {
-  const [queue, setQueue] = useState<QueuedSpeech[]>([])
+export function usePetSpeech(): PetSpeech | null {
+  const [queue, setQueue] = useState<PetSpeech[]>([])
   const current = queue[0] ?? null
 
   useEffect(() => {
-    let nextId = 0
-    return window.api.pet.onSpeech((speech) =>
-      setQueue((items) => [...items, { ...speech, id: nextId++ }])
-    )
+    const seen = new Set<number>()
+    const enqueue = (speeches: PetSpeech[]): void => {
+      const fresh = speeches.filter((speech) => !seen.has(speech.id))
+      for (const speech of fresh) seen.add(speech.id)
+      if (fresh.length > 0) setQueue((items) => [...items, ...fresh])
+    }
+    const unsubscribe = window.api.pet.onSpeech((speech) => enqueue([speech]))
+    void window.api.pet.getRecentSpeeches().then(enqueue)
+    return unsubscribe
   }, [])
 
   useEffect(() => {

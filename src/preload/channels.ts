@@ -22,6 +22,7 @@ export const IPC = {
   petGetSprite: 'pet:get-sprite',
   petSpriteChanged: 'pet:sprite-changed',
   petSpeech: 'pet:speech',
+  petGetRecentSpeeches: 'pet:get-recent-speeches',
   petGetMotion: 'pet:get-motion',
   petMotionChanged: 'pet:motion-changed',
   petOpenMainWindow: 'pet:open-main-window',
