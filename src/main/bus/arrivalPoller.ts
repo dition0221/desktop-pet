@@ -90,6 +90,8 @@ function announceDueAlerts(): void {
 /** 조회 간격이 알림 시점보다 길어도 놓치지 않게, 마지막 예측으로 N분 전이 되는 때에 다시 판정한다 */
 function scheduleAlertCheck(): void {
   clearTimeout(alertTimer)
+  // 펫이 숨어 있으면 알리지 않으므로 "지금 판정"이 끝없이 반복되지 않게 펫이 다시 보일 때 정한다
+  if (!isPetVisible()) return
   const { busFavorites, busPoll } = getSettings()
   const now = Date.now()
   const checkAt = nextAlertCheckAt({

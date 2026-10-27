@@ -89,7 +89,7 @@ export function findDueAlerts(options: {
   return { due, sent }
 }
 
-/** 조회 사이에 버스가 N분 안으로 들어오는 가장 이른 시각 — 그때 다시 판정해야 알림을 놓치지 않는다 */
+/** 아직 알리지 않은 버스가 N분 안으로 들어오는 가장 이른 시각 — 이미 들어와 있으면 지금(알림을 막 켠 경우) */
 export function nextAlertCheckAt(options: {
   favorites: BusFavorite[]
   stops: Record<string, StopArrivals>
@@ -100,8 +100,7 @@ export function nextAlertCheckAt(options: {
   const { favorites, stops, now, alertMinutes, sent } = options
   const times = nextBuses(favorites, stops, now)
     .filter((bus) => !findSent(sent, bus))
-    .map((bus) => bus.expectedAt - alertMinutes * 60_000)
-    .filter((time) => time > now)
+    .map((bus) => Math.max(now, bus.expectedAt - alertMinutes * 60_000))
   return times.length > 0 ? Math.min(...times) : null
 }
 

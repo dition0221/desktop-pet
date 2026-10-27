@@ -109,6 +109,12 @@ describe('nextAlertCheckAt', () => {
     expect(check({ arrivals: [arrival(8 * 60)] }).nextCheckAt).toBe(3 * MINUTE)
   })
 
+  it('알리지 않은 버스가 이미 N분 안이면 지금 판정한다', () => {
+    const settings = { favorites: [FAVORITE], now: MINUTE, alertMinutes: 5, sent: [] }
+    const stops = { [STOP.id]: { arrivals: [arrival(240)], updatedAt: 0, error: null } }
+    expect(nextAlertCheckAt({ ...settings, stops })).toBe(MINUTE)
+  })
+
   it('이미 알렸거나 다가올 버스가 없으면 null', () => {
     const first = check({ arrivals: [arrival(240)] })
     expect(check({ arrivals: [arrival(240)], sent: first.sent }).nextCheckAt).toBeNull()
