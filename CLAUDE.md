@@ -4,6 +4,7 @@
 - 기획·결정 사항·보안 체크리스트는 [docs/ROADMAP.md](docs/ROADMAP.md)가 기준이다. 작업 전에 해당 Phase를 읽는다
 - 명령: `pnpm dev` / `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build:win` — 작업을 마쳤다고 보고하기 전에 lint·typecheck·test를 통과시킨다
 - `src`의 `.ts`·`.tsx`는 별칭으로만 import한다 (`@main/*`, `@preload/*`, `@renderer/*`) — 별칭은 tsconfig `paths`에만 정의하고 Vite는 `tsconfigPaths`로 읽는다
+- 파일명: UI 컴포넌트 `.tsx`는 PascalCase, 그 외 파일과 폴더는 camelCase (kebab-case 금지) — 라우트 파일(`mainWindow/routes/`)만 파일명이 곧 경로라 예외
 - 외부 API 호출·키 복호화는 메인 프로세스에서만 한다. preload는 기능 단위 함수만 노출하고 타입은 [src/preload/api.ts](src/preload/api.ts)에 먼저 정의한다
 
 # 답변

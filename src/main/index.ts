@@ -1,7 +1,12 @@
-import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { denyAllPermissions, registerWebContentsGuards, secureWebPreferences } from '@main/security'
-import { app, BrowserWindow, Menu } from 'electron'
+import { DEV_SERVER_URL } from '@main/appPage'
+import { handleAppProtocol, registerAppScheme } from '@main/appProtocol'
+import { createMainWindow, showMainWindow } from '@main/mainWindow'
+import { startOverlayWindows } from '@main/overlayWindows'
+import { registerPetVisibilityIpc } from '@main/petVisibility'
+import { denyAllPermissions, registerWebContentsGuards } from '@main/security'
+import { createTray } from '@main/tray'
+import { app, Menu } from 'electron'
 
 const APP_USER_MODEL_ID = 'io.github.dition0221.desktop-pet'
 
@@ -10,46 +15,34 @@ if (is.dev) {
   app.setPath('userData', `${app.getPath('userData')}-dev`)
 }
 
-registerWebContentsGuards()
-
-function createWindow(): void {
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
-    show: false,
-    autoHideMenuBar: true,
-    webPreferences: {
-      ...secureWebPreferences,
-      preload: join(__dirname, '../preload/index.js')
-    }
-  })
-
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
+// 잠금은 userData 폴더 기준이라 개발 모드와 설치본은 동시에 실행된다
+if (app.requestSingleInstanceLock()) {
+  bootstrap()
+} else {
+  app.quit()
 }
 
-app.whenReady().then(() => {
-  electronApp.setAppUserModelId(APP_USER_MODEL_ID)
-  denyAllPermissions()
+function bootstrap(): void {
+  registerAppScheme()
+  registerWebContentsGuards()
+  app.on('second-instance', showMainWindow)
 
-  // autoHideMenuBar는 숨기기만 함 — 설치본에서 Alt로 기본 메뉴(Reload·DevTools)가 열리지 않게 제거
-  if (!is.dev) Menu.setApplicationMenu(null)
+  app.whenReady().then(() => {
+    electronApp.setAppUserModelId(APP_USER_MODEL_ID)
+    denyAllPermissions()
+    if (!DEV_SERVER_URL) handleAppProtocol()
 
-  // 개발 모드는 F12로 DevTools 토글, 설치본은 Ctrl+R 새로고침 차단
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
+    // autoHideMenuBar는 숨기기만 함 — 설치본에서 Alt로 기본 메뉴(Reload·DevTools)가 열리지 않게 제거
+    if (!is.dev) Menu.setApplicationMenu(null)
+
+    // 개발 모드는 F12로 DevTools 토글, 설치본은 Ctrl+R 새로고침 차단
+    app.on('browser-window-created', (_, window) => {
+      optimizer.watchWindowShortcuts(window)
+    })
+
+    registerPetVisibilityIpc()
+    createMainWindow()
+    startOverlayWindows()
+    createTray()
   })
-
-  createWindow()
-})
-
-app.on('window-all-closed', () => {
-  app.quit()
-})
+}

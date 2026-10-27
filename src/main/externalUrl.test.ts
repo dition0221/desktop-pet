@@ -1,4 +1,4 @@
-import { toAllowedExternalUrl } from '@main/external-url'
+import { toAllowedExternalUrl } from '@main/externalUrl'
 import { describe, expect, it } from 'vitest'
 
 describe('toAllowedExternalUrl', () => {
