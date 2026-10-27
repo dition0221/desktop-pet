@@ -151,6 +151,15 @@ export function setPetPack(pack: PackManifest): void {
   })
 }
 
+/** 말풍선이 떠 있는 동안 걷지 않게 — 화면 끝에서 말풍선이 잘리지 않는다 */
+export function holdPetStillUntil(until: number): void {
+  const now = Date.now()
+  if (plan.activity === 'idle' && plan.activityEndsAt >= until) return
+  const lane = laneOf(area)
+  const x = positionAt(plan, lane, now)
+  schedule(startActivity('idle', x, plan.direction, lane, now, until - now, MOTION_CONFIG))
+}
+
 export function startPet(pack: PackManifest | null): void {
   applyPack(pack)
   area = screen.getPrimaryDisplay().workArea
