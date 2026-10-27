@@ -11,5 +11,8 @@
   "eslint.enable": false,
   "prettier.enable": false,
   "files.eol": "\n",
+  "files.readonlyInclude": { "**/routeTree.gen.ts": true },
+  "files.watcherExclude": { "**/routeTree.gen.ts": true },
+  "search.exclude": { "**/routeTree.gen.ts": true },
   "json.schemaDownload.enable": true
 }
