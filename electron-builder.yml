@@ -15,6 +15,7 @@ electronFuses:
   runAsNode: false
   enableNodeOptionsEnvironmentVariable: false
   enableNodeCliInspectArguments: false
+  grantFileProtocolExtraPrivileges: false
   enableEmbeddedAsarIntegrityValidation: true
   onlyLoadAppFromAsar: true
 win:
