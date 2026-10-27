@@ -3,11 +3,13 @@ import { DEV_SERVER_URL } from '@main/appPage'
 import { APP_SCHEME_PRIVILEGES, handleAppProtocol } from '@main/appProtocol'
 import { createMainWindow, showMainWindow } from '@main/mainWindow'
 import { startOverlayWindows } from '@main/overlayWindows'
-import { DEFAULT_PACK_ID, loadPack } from '@main/pack/library'
 import { handlePackProtocol, PACK_SCHEME_PRIVILEGES } from '@main/pack/protocol'
+import { loadSelectedPack, registerPackIpc } from '@main/pack/selection'
 import { startPet } from '@main/pet/controller'
 import { registerPetVisibilityIpc } from '@main/pet/visibility'
 import { denyAllPermissions, registerWebContentsGuards } from '@main/security'
+import { registerSecretsIpc } from '@main/store/secrets'
+import { loadSettings, registerSettingsIpc } from '@main/store/settings'
 import { createTray } from '@main/tray'
 import { app, Menu, protocol } from 'electron'
 
@@ -45,8 +47,12 @@ function bootstrap(): void {
       optimizer.watchWindowShortcuts(window)
     })
 
-    // 오버레이가 첫 요청을 보내기 전에 팩을 읽고 펫 IPC를 연다
-    const pack = await loadPack(DEFAULT_PACK_ID)
+    // 창이 첫 요청을 보내기 전에 설정·팩을 읽고 IPC를 연다
+    await loadSettings()
+    const pack = await loadSelectedPack()
+    registerSettingsIpc()
+    registerSecretsIpc()
+    registerPackIpc()
     registerPetVisibilityIpc()
     createMainWindow()
     startOverlayWindows()
