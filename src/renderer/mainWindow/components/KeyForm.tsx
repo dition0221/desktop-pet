@@ -1,4 +1,6 @@
 import type { SecretId, SecretStatus } from '@preload/api'
+import Button from '@renderer/mainWindow/components/Button'
+import TextInput from '@renderer/mainWindow/components/TextInput'
 import { type FormEvent, useEffect, useId, useState } from 'react'
 
 /** 메인의 저장 스키마와 같은 상한 — 넘기면 IPC에서 거부된다 */
@@ -22,6 +24,7 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
   const [status, setStatus] = useState<SecretStatus | null>(null)
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     window.api.secrets.getStatus(secretId).then(setStatus, () => setError(KEY_FILE_ERROR_MESSAGE))
@@ -29,6 +32,7 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
 
   const save = async (event: FormEvent): Promise<void> => {
     event.preventDefault()
+    setSaving(true)
     try {
       const result = await window.api.secrets.save(secretId, value)
       if (!result.ok) {
@@ -40,6 +44,8 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
       setError(null)
     } catch {
       setError(KEY_FILE_ERROR_MESSAGE)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -58,7 +64,7 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
         {label}
       </label>
       <div className="flex gap-2">
-        <input
+        <TextInput
           id={inputId}
           type="password"
           autoComplete="off"
@@ -67,15 +73,11 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder={status?.saved ? '새 키로 바꾸려면 입력' : '키 입력'}
-          className="min-w-0 flex-1 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+          className="flex-1"
         />
-        <button
-          type="submit"
-          disabled={!value.trim()}
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50"
-        >
+        <Button type="submit" variant="primary" busy={saving} disabled={!value.trim()}>
           저장
-        </button>
+        </Button>
       </div>
       <div className="flex h-7 items-center gap-2 text-neutral-500 text-sm">
         {status?.saved ? (

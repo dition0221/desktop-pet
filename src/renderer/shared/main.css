@@ -1,9 +1,32 @@
 @import "tailwindcss";
 
-/* Tailwind v4 preflight는 버튼 커서를 default로 되돌림 — 프로젝트 기본은 pointer */
+/* primary-400 = 하치와레 가르마 색, 나머지는 같은 색상(OKLCH h≈229)에서 채도를 올린 하늘색 — static은 Leaflet CSS가 변수를 직접 참조해서 */
+@theme static {
+  --color-primary-50: #edf9ff;
+  --color-primary-100: #d6f2ff;
+  --color-primary-200: #b0e5ff;
+  --color-primary-300: #7ad1f8;
+  --color-primary-400: #75a1b6;
+  --color-primary-500: #00a6df;
+  --color-primary-600: #008bcc;
+  --color-primary-700: #006ea7;
+  --color-primary-800: #005382;
+}
+
 @layer base {
+  /* Tailwind v4 preflight는 버튼 커서를 default로 되돌림 — 프로젝트 기본은 pointer */
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  /* 스크롤 영역에 올렸을 때만 얇은 막대를 보여 준다 */
+  *:hover {
+    scrollbar-color: rgb(0 0 0 / 0.22) transparent;
   }
 }

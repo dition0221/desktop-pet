@@ -1,4 +1,5 @@
 import type { PackSummary } from '@preload/api'
+import Button from '@renderer/mainWindow/components/Button'
 import Page from '@renderer/mainWindow/components/Page'
 import { useSettings } from '@renderer/mainWindow/hooks/useSettings'
 import { createFileRoute } from '@tanstack/react-router'
@@ -24,14 +25,13 @@ function PetScreen(): React.JSX.Element {
 
   return (
     <Page title="펫">
-      <button
-        type="button"
+      <Button
         disabled={!settings}
         onClick={() => void window.api.pet.setVisible(!settings?.petVisible)}
-        className="self-start rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50"
+        className="self-start"
       >
         {settings?.petVisible ? '펫 숨기기' : '펫 보이기'}
-      </button>
+      </Button>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 font-medium text-sm">팩</legend>

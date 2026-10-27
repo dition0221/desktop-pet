@@ -26,6 +26,16 @@ const api: DesktopPetApi = {
     save: (id, value) => ipcRenderer.invoke(IPC.secretsSave, { id, value }),
     remove: (id) => ipcRenderer.invoke(IPC.secretsDelete, id)
   },
+  bus: {
+    testKey: () => ipcRenderer.invoke(IPC.busTestKey),
+    nearbyStops: (lat, lng) => ipcRenderer.invoke(IPC.busNearbyStops, { lat, lng }),
+    searchStops: (name) => ipcRenderer.invoke(IPC.busSearchStops, name),
+    stopRoutes: (stopId) => ipcRenderer.invoke(IPC.busStopRoutes, stopId),
+    routePath: (routeId) => ipcRenderer.invoke(IPC.busRoutePath, routeId),
+    addFavorite: (favorite) => ipcRenderer.invoke(IPC.busAddFavorite, favorite),
+    removeFavorite: (stopId, routeId) =>
+      ipcRenderer.invoke(IPC.busRemoveFavorite, { stopId, routeId })
+  },
   pet: {
     setVisible: (visible) => ipcRenderer.invoke(IPC.petSetVisible, visible),
     getSprite: () => ipcRenderer.invoke(IPC.petGetSprite),

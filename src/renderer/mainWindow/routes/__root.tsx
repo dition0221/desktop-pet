@@ -22,8 +22,8 @@ function RootLayout(): React.JSX.Element {
             key={to}
             to={to}
             activeOptions={{ exact: true }}
-            className="rounded-md px-3 py-2 text-sm hover:bg-neutral-100"
-            activeProps={{ className: 'bg-neutral-100 font-semibold' }}
+            className="rounded-md px-3 py-2 text-sm transition-colors hover:bg-neutral-100"
+            activeProps={{ className: 'bg-primary-100 font-semibold text-primary-800' }}
           >
             {label}
           </Link>

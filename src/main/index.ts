@@ -1,6 +1,7 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { DEV_SERVER_URL } from '@main/appPage'
 import { APP_SCHEME_PRIVILEGES, handleAppProtocol } from '@main/appProtocol'
+import { registerBusIpc } from '@main/bus/handlers'
 import { createMainWindow, showMainWindow } from '@main/mainWindow'
 import { startOverlayWindows } from '@main/overlayWindows'
 import { handlePackProtocol, PACK_SCHEME_PRIVILEGES } from '@main/pack/protocol'
@@ -52,6 +53,7 @@ function bootstrap(): void {
     const pack = await loadSelectedPack()
     registerSettingsIpc()
     registerSecretsIpc()
+    registerBusIpc()
     registerPackIpc()
     registerPetVisibilityIpc()
     createMainWindow()

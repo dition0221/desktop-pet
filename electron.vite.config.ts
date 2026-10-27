@@ -7,12 +7,12 @@ import type { Plugin } from 'vite'
 
 const resolve = { tsconfigPaths: true }
 
-/** 모든 렌더러 페이지 공통 — `pack:`은 펫 팩 에셋 */
+/** 모든 렌더러 페이지 공통 — `pack:`은 펫 팩 에셋, 타일 서버는 버스 지도 */
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: pack:",
+  "img-src 'self' data: pack: https://tile.openstreetmap.org",
   'media-src pack:',
   "connect-src 'self'",
   "object-src 'none'",

@@ -8,8 +8,11 @@ let quitting = false
 
 export function createMainWindow(): void {
   const window = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1100,
+    height: 740,
+    // 이보다 좁으면 버스 지도가 패널에 밀려 거의 보이지 않는다
+    minWidth: 900,
+    minHeight: 600,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
