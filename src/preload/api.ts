@@ -31,10 +31,62 @@ export interface PetSprite {
   animations: { idle: PetSpriteAnimation; walk: PetSpriteAnimation }
 }
 
+export interface BusStop {
+  /** TAGO 정류소 ID (`DJB…`) */
+  id: string
+  name: string
+  /** 정류소 표지판의 5자리 번호 */
+  number: string | null
+  lat: number
+  lng: number
+}
+
+export interface BusRoute {
+  /** TAGO 노선 ID (`DJB…`) */
+  id: string
+  number: string
+  type: string | null
+  start: string | null
+  end: string | null
+}
+
+export interface BusRouteStop extends BusStop {
+  order: number
+  /** 상행·하행 구분 — 선 색을 나누는 데만 쓴다 */
+  updown: number
+}
+
+/** 정류소만 고르거나, 그 정류소의 특정 노선까지 고른다 */
+export interface BusFavorite {
+  stop: BusStop
+  route: Pick<BusRoute, 'id' | 'number'> | null
+}
+
+export type BusErrorCode =
+  | 'no-key'
+  | 'invalid-key'
+  | 'not-allowed'
+  | 'quota-exceeded'
+  | 'network'
+  | 'unknown'
+
+export type BusResult<T> = { ok: true; data: T } | { ok: false; error: BusErrorCode }
+
+export interface BusStopSearch {
+  stops: BusStop[]
+  /** 한 번에 받는 수보다 결과가 많아 잘렸는지 */
+  truncated: boolean
+}
+
+export type AddFavoriteResult = { ok: true } | { ok: false; reason: 'limit'; limit: number }
+
+export type BusApiName = 'stop' | 'route' | 'arrival' | 'location'
+
 /** userData/settings.json — 키는 secrets.json에 따로 */
 export interface Settings {
   petVisible: boolean
   packId: string
+  busFavorites: BusFavorite[]
 }
 
 export interface PackSummary {
@@ -75,6 +127,20 @@ export interface DesktopPetApi {
     /** 키는 이때 한 번만 메인으로 간다 */
     save(id: SecretId, value: string): Promise<SaveSecretResult>
     remove(id: SecretId): Promise<SecretStatus>
+  }
+  /** 메인 창에서만 허용 — 호출 한도(API당 일 10,000건)를 쓰므로 지도 이동 등은 렌더러에서 debounce */
+  bus: {
+    /** 사용하는 TAGO API마다 저장된 키로 가장 가벼운 조회를 해 본다 */
+    testKey(): Promise<Record<BusApiName, BusErrorCode | 'ok'>>
+    /** 반경 500m */
+    nearbyStops(lat: number, lng: number): Promise<BusResult<BusStop[]>>
+    searchStops(name: string): Promise<BusResult<BusStopSearch>>
+    stopRoutes(stopId: string): Promise<BusResult<BusRoute[]>>
+    routePath(routeId: string): Promise<BusResult<BusRouteStop[]>>
+    /** 즐겨찾기 목록은 settings.busFavorites */
+    addFavorite(favorite: BusFavorite): Promise<AddFavoriteResult>
+    /** routeId가 null이면 정류소 즐겨찾기 */
+    removeFavorite(stopId: string, routeId: string | null): Promise<void>
   }
   pet: {
     /** 메인 창에서만 허용 — 현재 값은 settings.petVisible */

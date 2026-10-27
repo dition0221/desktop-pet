@@ -41,6 +41,12 @@ function decrypt(encrypted: string): string | null {
   }
 }
 
+/** 메인 프로세스 안에서만 쓴다 — 결과를 IPC로 내보내지 않는다 */
+export async function readSecret(id: SecretId): Promise<string | null> {
+  const encrypted = (await readEncrypted())[id]
+  return encrypted ? decrypt(encrypted) : null
+}
+
 export async function getSecretStatus(id: SecretId): Promise<SecretStatus> {
   const encrypted = (await readEncrypted())[id]
   if (!encrypted) return NOT_SAVED

@@ -1,3 +1,4 @@
+import { busFavoriteSchema } from '@main/bus/tago'
 import { broadcast, handle } from '@main/ipc'
 import { DEFAULT_PACK_ID } from '@main/pack/library'
 import { PACK_ID_PATTERN } from '@main/pack/schema'
@@ -7,11 +8,24 @@ import { IPC } from '@preload/channels'
 import { z } from 'zod'
 
 const SETTINGS_FILE = 'settings.json'
+export const MAX_BUS_FAVORITES = 20
+
+/** 목록은 깨진 항목만 버린다 — 하나 때문에 목록 전체를 잃지 않게 */
+function validItems<T>(items: unknown[], schema: z.ZodType<T>): T[] {
+  return items.flatMap((item) => {
+    const parsed = schema.safeParse(item)
+    return parsed.success ? [parsed.data] : []
+  })
+}
 
 /** 잘못된 항목만 기본값으로 — 하나가 깨져도 나머지 설정은 살린다 */
 const settingsSchema = z.object({
   petVisible: z.boolean().catch(true),
-  packId: z.string().regex(PACK_ID_PATTERN).catch(DEFAULT_PACK_ID)
+  packId: z.string().regex(PACK_ID_PATTERN).catch(DEFAULT_PACK_ID),
+  busFavorites: z
+    .array(z.unknown())
+    .catch([])
+    .transform((items) => validItems(items, busFavoriteSchema).slice(0, MAX_BUS_FAVORITES))
 }) satisfies z.ZodType<Settings>
 
 let settings: Settings
