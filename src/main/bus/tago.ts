@@ -1,4 +1,11 @@
-import type { BusErrorCode, BusFavorite, BusRoute, BusRouteStop, BusStop } from '@preload/api'
+import type {
+  BusArrival,
+  BusErrorCode,
+  BusFavorite,
+  BusRoute,
+  BusRouteStop,
+  BusStop
+} from '@preload/api'
 import { z } from 'zod'
 
 export const DAEJEON_CITY_CODE = 25
@@ -149,6 +156,30 @@ export const routeItemSchema = z
       type: item.routetp ?? null,
       start: item.startnodenm ?? null,
       end: item.endnodenm ?? null
+    })
+  )
+
+/** coerce는 빈 문자열·null을 0으로 바꿈 — "곧 도착"·"0정류장 전"으로 잘못 보이지 않게 먼저 걷어낸다 */
+function blankToUndefined(value: unknown): unknown {
+  return value === '' || value === null ? undefined : value
+}
+
+/** `arrtime`은 초 단위, `arrprevstationcnt`는 남은 정류장 수 */
+export const arrivalItemSchema = z
+  .object({
+    routeid: z.string().regex(TAGO_ID_PATTERN),
+    routeno: z.union([z.string(), z.number()]).transform(String).pipe(z.string().min(1).max(16)),
+    routetp: z.string().optional(),
+    arrtime: z.preprocess(blankToUndefined, z.coerce.number().min(0)),
+    arrprevstationcnt: z.preprocess(blankToUndefined, z.coerce.number().min(0).optional())
+  })
+  .transform(
+    (item): BusArrival => ({
+      routeId: item.routeid,
+      routeNumber: item.routeno,
+      routeType: item.routetp ?? null,
+      secondsLeft: item.arrtime,
+      stopsLeft: item.arrprevstationcnt ?? null
     })
   )
 

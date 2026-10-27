@@ -1,4 +1,5 @@
 import {
+  arrivalItemSchema,
   DAEJEON_CITY_CODE,
   isKnownTagoError,
   maskServiceKey,
@@ -14,6 +15,7 @@ import {
 import { readSecret } from '@main/store/secrets'
 import type {
   BusApiName,
+  BusArrival,
   BusErrorCode,
   BusResult,
   BusRoute,
@@ -181,6 +183,19 @@ export function routePath(routeId: string): Promise<BusResult<BusRouteStop[]>> {
         )
       ).sort((a, b) => a.order - b.order)
     )
+  )
+}
+
+export function stopArrivals(stopId: string): Promise<BusResult<BusArrival[]>> {
+  return toResult(async () =>
+    (
+      await requestItems(
+        'arrival',
+        'getSttnAcctoArvlPrearngeInfoList',
+        { ...CITY_PARAMS, nodeId: stopId },
+        arrivalItemSchema
+      )
+    ).sort((a, b) => a.secondsLeft - b.secondsLeft)
   )
 }
 

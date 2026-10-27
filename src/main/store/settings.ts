@@ -1,3 +1,4 @@
+import { busPollSettingsSchema, DEFAULT_BUS_POLL } from '@main/bus/pollPlan'
 import { busFavoriteSchema } from '@main/bus/tago'
 import { broadcast, handle } from '@main/ipc'
 import { DEFAULT_PACK_ID } from '@main/pack/library'
@@ -25,11 +26,13 @@ const settingsSchema = z.object({
   busFavorites: z
     .array(z.unknown())
     .catch([])
-    .transform((items) => validItems(items, busFavoriteSchema).slice(0, MAX_BUS_FAVORITES))
+    .transform((items) => validItems(items, busFavoriteSchema).slice(0, MAX_BUS_FAVORITES)),
+  busPoll: busPollSettingsSchema.catch(DEFAULT_BUS_POLL)
 }) satisfies z.ZodType<Settings>
 
 let settings: Settings
 let writing: Promise<unknown> = Promise.resolve()
+const changeListeners = new Set<(settings: Settings) => void>()
 
 /** 창을 만들기 전에 한 번 — 키가 없는 파일이라 깨졌으면 기본값으로 시작해 다음 저장 때 덮어쓴다 */
 export async function loadSettings(): Promise<void> {
@@ -53,6 +56,11 @@ export function updateSettings(patch: Partial<Settings>): void {
     .then(() => writeJsonFile(userDataFile(SETTINGS_FILE), snapshot))
     .catch((error) => console.error('[settings] write failed', error))
   broadcast(IPC.settingsChanged, settings, ['main'])
+  for (const listener of changeListeners) listener(settings)
+}
+
+export function onSettingsChange(listener: (settings: Settings) => void): void {
+  changeListeners.add(listener)
 }
 
 export function registerSettingsIpc(): void {

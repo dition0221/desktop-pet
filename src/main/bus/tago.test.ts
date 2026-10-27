@@ -1,4 +1,5 @@
 import {
+  arrivalItemSchema,
   isKnownTagoError,
   maskServiceKey,
   normalizeServiceKey,
@@ -111,6 +112,45 @@ describe('항목 변환', () => {
   it('노선 경유 정류소는 순서와 상하행을 가진다', () => {
     const stop = { ...STOP, nodeord: 3, updowncd: 1, routeid: 'DJB30300076' }
     expect(routeStopItemSchema.parse(stop)).toMatchObject({ id: 'DJB8001413', order: 3, updown: 1 })
+  })
+})
+
+describe('arrivalItemSchema', () => {
+  const ARRIVAL = {
+    nodeid: 'DJB8001793',
+    nodenm: '서대전네거리',
+    routeid: 'DJB30300002',
+    routeno: 2,
+    routetp: '급행버스',
+    arrprevstationcnt: 3,
+    vehicletp: '저상버스',
+    arrtime: 271
+  }
+
+  it('숫자·문자열이 섞여도 같은 형태로 바꾼다', () => {
+    const expected = {
+      routeId: 'DJB30300002',
+      routeNumber: '2',
+      routeType: '급행버스',
+      secondsLeft: 271,
+      stopsLeft: 3
+    }
+    expect(arrivalItemSchema.parse(ARRIVAL)).toEqual(expected)
+    expect(
+      arrivalItemSchema.parse({ ...ARRIVAL, routeno: '2', arrtime: '271', arrprevstationcnt: '3' })
+    ).toEqual(expected)
+  })
+
+  it('한 건만 와도 목록으로 받는다', () => {
+    expect(parseTagoPage(envelope({ item: ARRIVAL }), arrivalItemSchema).items).toHaveLength(1)
+  })
+
+  it('도착 시간이 비면 버리고, 남은 정류장 수가 비면 모른다고 둔다', () => {
+    expect(arrivalItemSchema.safeParse({ ...ARRIVAL, arrtime: '' }).success).toBe(false)
+    expect(arrivalItemSchema.safeParse({ ...ARRIVAL, arrtime: null }).success).toBe(false)
+    expect(arrivalItemSchema.parse({ ...ARRIVAL, arrprevstationcnt: null }).stopsLeft).toBeNull()
+    const { arrprevstationcnt: _, ...withoutCount } = ARRIVAL
+    expect(arrivalItemSchema.parse(withoutCount).stopsLeft).toBeNull()
   })
 })
 

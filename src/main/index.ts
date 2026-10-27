@@ -1,6 +1,7 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { DEV_SERVER_URL } from '@main/appPage'
 import { APP_SCHEME_PRIVILEGES, handleAppProtocol } from '@main/appProtocol'
+import { startArrivalPoller } from '@main/bus/arrivalPoller'
 import { registerBusIpc } from '@main/bus/handlers'
 import { createMainWindow, showMainWindow } from '@main/mainWindow'
 import { startOverlayWindows } from '@main/overlayWindows'
@@ -57,6 +58,7 @@ function bootstrap(): void {
     registerPackIpc()
     registerPetVisibilityIpc()
     createMainWindow()
+    startArrivalPoller()
     startOverlayWindows()
     startPet(pack)
     createTray()
