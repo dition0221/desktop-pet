@@ -1,5 +1,4 @@
-import { handle } from '@main/ipc'
-import { forEachOverlay } from '@main/overlayWindows'
+import { broadcast, handle } from '@main/ipc'
 import { holdPetStillUntil } from '@main/pet/controller'
 import type { PetSpeech } from '@preload/api'
 import { IPC } from '@preload/channels'
@@ -20,7 +19,7 @@ export function sayToPet(text: string): void {
   speakingUntil = Math.max(now, speakingUntil) + SPEECH_DURATION_MS
   recent = [...recent.filter((item) => item.endsAt > now), { speech, endsAt: speakingUntil }]
   holdPetStillUntil(speakingUntil)
-  forEachOverlay((window) => window.webContents.send(IPC.petSpeech, speech))
+  broadcast(IPC.petSpeech, speech, ['overlay'])
 }
 
 export function registerSpeechIpc(): void {

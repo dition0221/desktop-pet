@@ -1,5 +1,6 @@
 import { handle } from '@main/ipc'
 import { readJsonFile, userDataFile, writeJsonFile } from '@main/store/jsonFile'
+import { createSerialQueue } from '@main/store/serialQueue'
 import type { SaveSecretResult, SecretId, SecretStatus } from '@preload/api'
 import { IPC } from '@preload/channels'
 import { safeStorage } from 'electron'
@@ -15,7 +16,7 @@ const secretValueSchema = z.string().trim().min(1).max(1024)
 
 type EncryptedSecrets = Record<string, string>
 
-let writing: Promise<unknown> = Promise.resolve()
+const enqueueWrite = createSerialQueue()
 const changeListeners = new Set<(id: SecretId) => void>()
 
 /** 파일이 없을 때만 빈 값 — 깨진 파일을 빈 값으로 읽고 덮어쓰면 다른 키가 사라진다 */
@@ -25,13 +26,11 @@ async function readEncrypted(): Promise<EncryptedSecrets> {
 
 /** 읽고-고치고-쓰기가 겹치면 먼저 저장한 키가 사라짐 — 한 줄로 세운다 */
 function mutate(change: (secrets: EncryptedSecrets) => void): Promise<void> {
-  const task = writing.then(async () => {
+  return enqueueWrite(async () => {
     const secrets = await readEncrypted()
     change(secrets)
     await writeJsonFile(userDataFile(SECRETS_FILE), secrets)
   })
-  writing = task.catch(() => undefined)
-  return task
 }
 
 function decrypt(encrypted: string): string | null {

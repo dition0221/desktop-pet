@@ -1,5 +1,6 @@
 import type { PackSummary } from '@preload/api'
 import Button from '@renderer/mainWindow/components/Button'
+import ErrorText from '@renderer/mainWindow/components/ErrorText'
 import Page from '@renderer/mainWindow/components/Page'
 import { useSettings } from '@renderer/mainWindow/hooks/useSettings'
 import { createFileRoute } from '@tanstack/react-router'
@@ -50,11 +51,7 @@ function PetScreen(): React.JSX.Element {
             <span className="text-neutral-400">{pack.id}</span>
           </label>
         ))}
-        {failedPackId && (
-          <p role="alert" className="text-red-600 text-sm">
-            {failedPackId} 팩을 읽지 못했어요
-          </p>
-        )}
+        {failedPackId && <ErrorText>{failedPackId} 팩을 읽지 못했어요</ErrorText>}
       </fieldset>
     </Page>
   )

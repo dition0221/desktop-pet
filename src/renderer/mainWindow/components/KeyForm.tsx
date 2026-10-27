@@ -1,5 +1,6 @@
 import type { SecretId, SecretStatus } from '@preload/api'
 import Button from '@renderer/mainWindow/components/Button'
+import ErrorText from '@renderer/mainWindow/components/ErrorText'
 import TextInput from '@renderer/mainWindow/components/TextInput'
 import { type FormEvent, useEffect, useId, useState } from 'react'
 
@@ -95,11 +96,7 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
           status && <span>저장된 키 없음</span>
         )}
       </div>
-      {error && (
-        <p role="alert" className="text-red-600 text-sm">
-          {error}
-        </p>
-      )}
+      {error && <ErrorText>{error}</ErrorText>}
     </form>
   )
 }

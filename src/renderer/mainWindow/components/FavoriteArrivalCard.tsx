@@ -1,7 +1,10 @@
 import type { BusFavorite, StopArrivals } from '@preload/api'
 import { arrivalLabel, favoriteArrivals } from '@renderer/mainWindow/arrivalFormat'
 import { BUS_ERROR_MESSAGES } from '@renderer/mainWindow/busErrorMessages'
-import AlertToggle from '@renderer/mainWindow/components/AlertToggle'
+import ErrorText from '@renderer/mainWindow/components/ErrorText'
+import { BellIcon } from '@renderer/mainWindow/components/Icons'
+import IconToggle from '@renderer/mainWindow/components/IconToggle'
+import RouteBadge from '@renderer/mainWindow/components/RouteBadge'
 import Spinner from '@renderer/mainWindow/components/Spinner'
 
 /** 정류소 즐겨찾기는 노선이 많을 수 있어 가까운 순으로 이만큼만 */
@@ -36,33 +39,26 @@ function FavoriteArrivalCard({
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4">
       <header className="flex items-baseline gap-1.5">
-        {favorite.route && (
-          <span className="shrink-0 rounded bg-primary-100 px-1.5 font-semibold text-primary-800 text-xs">
-            {favorite.route.number}
-          </span>
-        )}
+        {favorite.route && <RouteBadge number={favorite.route.number} />}
         <h2 className="truncate font-semibold">{favorite.stop.name}</h2>
         <span className="shrink-0 text-neutral-400 text-xs">{favorite.stop.number}</span>
         {favorite.route && (
           <span className="ml-auto self-center">
-            <AlertToggle
+            <IconToggle
               active={favorite.alert}
               label={`도착 ${alertMinutes}분 전에 펫이 알려 주기`}
               onChange={(active) => {
                 const routeId = favorite.route?.id
                 if (routeId) void window.api.bus.setFavoriteAlert(favorite.stop.id, routeId, active)
               }}
+              icon={BellIcon}
             />
           </span>
         )}
       </header>
 
       {stop === undefined && polling && <Spinner className="size-4 text-primary-600" />}
-      {stop?.error && (
-        <p role="alert" className="text-red-600 text-sm">
-          {BUS_ERROR_MESSAGES[stop.error]}
-        </p>
-      )}
+      {stop?.error && <ErrorText>{BUS_ERROR_MESSAGES[stop.error]}</ErrorText>}
       {stop && !stop.error && rows.length === 0 && (
         <p className="text-neutral-400 text-sm">도착 예정 버스가 없어요</p>
       )}
