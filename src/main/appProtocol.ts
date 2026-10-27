@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { resolveInsideRoot } from '@main/safePath'
-import { protocol } from 'electron'
+import { type CustomScheme, protocol } from 'electron'
 
 const APP_SCHEME = 'app'
 const APP_HOST = 'renderer'
@@ -21,11 +21,10 @@ const MIME_TYPES: Record<string, string> = {
   '.woff2': 'font/woff2'
 }
 
-/** app ready 전에 한 번만 호출 가능 — standard·secure여야 origin이 생겨 CSP 'self'가 동작 */
-export function registerAppScheme(): void {
-  protocol.registerSchemesAsPrivileged([
-    { scheme: APP_SCHEME, privileges: { standard: true, secure: true } }
-  ])
+/** standard·secure여야 origin이 생겨 CSP 'self'가 동작 */
+export const APP_SCHEME_PRIVILEGES: CustomScheme = {
+  scheme: APP_SCHEME,
+  privileges: { standard: true, secure: true }
 }
 
 /** GrantFileProtocolExtraPrivileges fuse를 끄면 file://로 asar 안 페이지를 못 읽음 — 렌더러를 여기서 서빙 */
