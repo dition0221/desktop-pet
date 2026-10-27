@@ -62,8 +62,8 @@ function FavoriteArrivalCard({
             >
               <span className="truncate">
                 <span className="font-semibold">{arrival.routeNumber}</span>
-                {arrival.routeType && (
-                  <span className="ml-1 text-neutral-400 text-xs">{arrival.routeType}</span>
+                {arrival.destination && (
+                  <span className="ml-1 text-neutral-400 text-xs">→ {arrival.destination}</span>
                 )}
               </span>
               <span className="shrink-0">

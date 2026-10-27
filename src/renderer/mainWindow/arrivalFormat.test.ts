@@ -3,7 +3,15 @@ import { arrivalLabel, favoriteArrivals } from '@renderer/mainWindow/arrivalForm
 import { describe, expect, it } from 'vitest'
 
 function arrival(routeId: string, secondsLeft: number): BusArrival {
-  return { routeId, routeNumber: routeId, routeType: null, secondsLeft, stopsLeft: 2 }
+  return {
+    routeId,
+    routeNumber: routeId,
+    routeType: null,
+    secondsLeft,
+    stopsLeft: 2,
+    vehicleId: null,
+    destination: null
+  }
 }
 
 const STOP = { id: 'DJB8001413', name: '대전역', number: '12460', lat: 36.33, lng: 127.43 }

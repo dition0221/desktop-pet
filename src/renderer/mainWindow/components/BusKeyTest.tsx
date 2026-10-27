@@ -4,10 +4,9 @@ import Button from '@renderer/mainWindow/components/Button'
 import { useState } from 'react'
 
 const API_LABELS: Record<BusApiName, string> = {
-  stop: '버스정류소정보',
-  route: '버스노선정보',
-  arrival: '버스도착정보',
-  location: '버스위치정보'
+  stop: '정류소 (국토교통부)',
+  route: '노선 (국토교통부)',
+  arrival: '도착 (대전시)'
 }
 
 function BusKeyTest(): React.JSX.Element {
@@ -45,8 +44,9 @@ function BusKeyTest(): React.JSX.Element {
         </ul>
       )}
       <p className="text-neutral-400 text-xs">
-        공공데이터포털에서 국토교통부(TAGO) 버스 API 4종을 각각 활용신청해야 해요. 발급 직후에는
-        키가 등록되지 않았다는 오류가 날 수 있어요.
+        공공데이터포털에서 국토교통부(TAGO) 버스정류소정보·버스노선정보와 대전광역시 정류소별
+        도착정보 조회를 각각 활용신청해야 해요. 발급 직후에는 키가 등록되지 않았다는 오류가 날 수
+        있어요.
       </p>
     </div>
   )

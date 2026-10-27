@@ -1,5 +1,5 @@
+import { DAEJEON_ARRIVAL_URL, parseDaejeonArrivals } from '@main/bus/daejeon'
 import {
-  arrivalItemSchema,
   DAEJEON_CITY_CODE,
   isKnownTagoError,
   maskServiceKey,
@@ -36,12 +36,12 @@ const CITY_PARAMS = { cityCode: String(DAEJEON_CITY_CODE), pageNo: '1', numOfRow
 const STATIC_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const STATIC_CACHE_LIMIT = 200
 
-const SERVICES: Record<BusApiName, string> = {
+const TAGO_SERVICES = {
   stop: 'BusSttnInfoInqireService',
-  route: 'BusRouteInfoInqireService',
-  arrival: 'ArvlInfoInqireService',
-  location: 'BusLcInfoInqireService'
-}
+  route: 'BusRouteInfoInqireService'
+} as const
+/** 키 테스트용 — 대전시청 정류소, 운행 시간이 아니면 결과 없음으로 정상 응답한다 */
+const KEY_TEST_DAEJEON_STOP = '8001378'
 
 class BusRequestError extends Error {
   constructor(readonly code: BusErrorCode) {
@@ -54,41 +54,62 @@ interface CacheEntry<T> {
   savedAt: number
 }
 
-async function requestTago<T>(
-  api: BusApiName,
-  operation: string,
+/** 저장된 키로 부르고, 로그에는 키를 가린 원인만 남긴다 */
+async function request<T>(
+  label: string,
+  url: string,
   params: Record<string, string>,
-  itemSchema: z.ZodType<T>
-): Promise<TagoPage<T>> {
+  parse: (text: string) => T
+): Promise<T> {
   const savedKey = await readSecret('busServiceKey')
   if (!savedKey) throw new BusRequestError('no-key')
   const key = normalizeServiceKey(savedKey)
 
-  const query = new URLSearchParams({ ...params, _type: 'json', serviceKey: key })
+  const query = new URLSearchParams({ ...params, serviceKey: key })
   let text: string
   try {
-    const response = await net.fetch(`${TAGO_BASE_URL}/${SERVICES[api]}/${operation}?${query}`, {
+    const response = await net.fetch(`${url}?${query}`, {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
     })
     text = await response.text()
   } catch (error) {
-    console.error(`[bus] ${api}/${operation} failed:`, maskServiceKey(String(error), key))
+    console.error(`[bus] ${label} failed:`, maskServiceKey(String(error), key))
     throw new BusRequestError('network')
   }
 
   try {
-    return parseTagoPage(text, itemSchema)
+    return parse(text)
   } catch (error) {
     if (error instanceof TagoError && !isKnownTagoError(error)) {
       const detail = maskServiceKey(`${error.code} ${error.message}`, key)
-      console.error(`[bus] ${api}/${operation} unexpected response:`, detail)
+      console.error(`[bus] ${label} unexpected response:`, detail)
     }
     throw error
   }
 }
 
+function requestTago<T>(
+  service: keyof typeof TAGO_SERVICES,
+  operation: string,
+  params: Record<string, string>,
+  itemSchema: z.ZodType<T>
+): Promise<TagoPage<T>> {
+  const url = `${TAGO_BASE_URL}/${TAGO_SERVICES[service]}/${operation}`
+  return request(`${service}/${operation}`, url, { ...params, _type: 'json' }, (text) =>
+    parseTagoPage(text, itemSchema)
+  )
+}
+
+function requestDaejeonArrivals(stopId: string): Promise<BusArrival[]> {
+  // 대전시 정류소 ID는 TAGO ID에서 `DJB`를 뗀 숫자
+  const params = { BusStopID: stopId.replace(/^DJB/, '') }
+  return request('arrival', DAEJEON_ARRIVAL_URL, params, (text) =>
+    parseDaejeonArrivals(text, Date.now())
+  )
+}
+
 async function requestItems<T>(
-  api: BusApiName,
+  api: keyof typeof TAGO_SERVICES,
   operation: string,
   params: Record<string, string>,
   itemSchema: z.ZodType<T>
@@ -188,25 +209,20 @@ export function routePath(routeId: string): Promise<BusResult<BusRouteStop[]>> {
 
 export function stopArrivals(stopId: string): Promise<BusResult<BusArrival[]>> {
   return toResult(async () =>
-    (
-      await requestItems(
-        'arrival',
-        'getSttnAcctoArvlPrearngeInfoList',
-        { ...CITY_PARAMS, nodeId: stopId },
-        arrivalItemSchema
-      )
-    ).sort((a, b) => a.secondsLeft - b.secondsLeft)
+    (await requestDaejeonArrivals(stopId)).sort((a, b) => a.secondsLeft - b.secondsLeft)
   )
 }
 
-/** 활용신청을 빠뜨린 API를 찾게 API마다 따로 판정 — 도시코드 목록은 모든 TAGO 버스 API에 있는 가장 가벼운 조회 */
+/** 활용신청을 빠뜨린 API를 찾게 API마다 따로 판정 — TAGO는 가장 가벼운 도시코드 목록으로 */
 export async function testBusKey(): Promise<Record<BusApiName, BusErrorCode | 'ok'>> {
-  const apis = Object.keys(SERVICES) as BusApiName[]
-  const results = await Promise.all(
-    apis.map(async (api) => {
-      const result = await toResult(() => requestItems(api, 'getCtyCodeList', {}, z.unknown()))
-      return [api, result.ok ? 'ok' : result.error] as const
-    })
-  )
-  return Object.fromEntries(results) as Record<BusApiName, BusErrorCode | 'ok'>
+  const outcome = async (task: () => Promise<unknown>): Promise<BusErrorCode | 'ok'> => {
+    const result = await toResult(task)
+    return result.ok ? 'ok' : result.error
+  }
+  const [stop, route, arrival] = await Promise.all([
+    outcome(() => requestItems('stop', 'getCtyCodeList', {}, z.unknown())),
+    outcome(() => requestItems('route', 'getCtyCodeList', {}, z.unknown())),
+    outcome(() => requestDaejeonArrivals(KEY_TEST_DAEJEON_STOP))
+  ])
+  return { stop, route, arrival }
 }

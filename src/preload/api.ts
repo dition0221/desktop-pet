@@ -87,6 +87,10 @@ export interface BusArrival {
   /** 응답을 받은 시각(`StopArrivals.updatedAt`) 기준 남은 시간 */
   secondsLeft: number
   stopsLeft: number | null
+  /** 차량 번호 — 같은 버스를 알아보는 데 쓴다 */
+  vehicleId: string | null
+  /** 행선지 — 같은 노선의 방향을 구분한다 */
+  destination: string | null
 }
 
 export interface StopArrivals {
@@ -119,7 +123,8 @@ export interface BusPollSettings {
   activeHours: { start: string; end: string }
 }
 
-export type BusApiName = 'stop' | 'route' | 'arrival' | 'location'
+/** stop·route는 TAGO, arrival은 대전시 도착정보 */
+export type BusApiName = 'stop' | 'route' | 'arrival'
 
 /** userData/settings.json — 키는 secrets.json에 따로 */
 export interface Settings {

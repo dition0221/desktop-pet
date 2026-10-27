@@ -1,11 +1,4 @@
-import type {
-  BusArrival,
-  BusErrorCode,
-  BusFavorite,
-  BusRoute,
-  BusRouteStop,
-  BusStop
-} from '@preload/api'
+import type { BusErrorCode, BusFavorite, BusRoute, BusRouteStop, BusStop } from '@preload/api'
 import { z } from 'zod'
 
 export const DAEJEON_CITY_CODE = 25
@@ -77,14 +70,19 @@ export interface TagoPage<T> {
   totalCount: number
 }
 
+/** 인증·한도 오류는 서비스와 상관없이 게이트웨이가 같은 XML 형식으로 돌려준다 */
+export function gatewayError(text: string): TagoError | null {
+  const reason = text.match(GATEWAY_REASON_PATTERN)?.[1]
+  return reason ? new TagoError(reason, text.match(GATEWAY_MESSAGE_PATTERN)?.[1] ?? '') : null
+}
+
 /** 결과가 없으면 `items`가 빈 문자열, 한 건이면 배열이 아니라 객체로 온다 — 형식이 다른 항목은 버린다 */
 export function parseTagoPage<T>(text: string, itemSchema: z.ZodType<T>): TagoPage<T> {
   let json: unknown
   try {
     json = JSON.parse(text)
   } catch {
-    const reason = text.match(GATEWAY_REASON_PATTERN)?.[1] ?? 'non-json'
-    throw new TagoError(reason, text.match(GATEWAY_MESSAGE_PATTERN)?.[1] ?? text.slice(0, 200))
+    throw gatewayError(text) ?? new TagoError('non-json', text.slice(0, 200))
   }
 
   const envelope = envelopeSchema.safeParse(json)
@@ -156,30 +154,6 @@ export const routeItemSchema = z
       type: item.routetp ?? null,
       start: item.startnodenm ?? null,
       end: item.endnodenm ?? null
-    })
-  )
-
-/** coerce는 빈 문자열·null을 0으로 바꿈 — "곧 도착"·"0정류장 전"으로 잘못 보이지 않게 먼저 걷어낸다 */
-function blankToUndefined(value: unknown): unknown {
-  return value === '' || value === null ? undefined : value
-}
-
-/** `arrtime`은 초 단위, `arrprevstationcnt`는 남은 정류장 수 */
-export const arrivalItemSchema = z
-  .object({
-    routeid: z.string().regex(TAGO_ID_PATTERN),
-    routeno: z.union([z.string(), z.number()]).transform(String).pipe(z.string().min(1).max(16)),
-    routetp: z.string().optional(),
-    arrtime: z.preprocess(blankToUndefined, z.coerce.number().min(0)),
-    arrprevstationcnt: z.preprocess(blankToUndefined, z.coerce.number().min(0).optional())
-  })
-  .transform(
-    (item): BusArrival => ({
-      routeId: item.routeid,
-      routeNumber: item.routeno,
-      routeType: item.routetp ?? null,
-      secondsLeft: item.arrtime,
-      stopsLeft: item.arrprevstationcnt ?? null
     })
   )
 
