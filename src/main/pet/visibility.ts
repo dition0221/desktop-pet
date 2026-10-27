@@ -1,21 +1,21 @@
-import { broadcast, handle } from '@main/ipc'
+import { handle } from '@main/ipc'
+import { getSettings, updateSettings } from '@main/store/settings'
 import { IPC } from '@preload/channels'
 import { z } from 'zod'
 
 type Listener = (visible: boolean) => void
 
-let petVisible = true
 const listeners = new Set<Listener>()
 
 export function isPetVisible(): boolean {
-  return petVisible
+  return getSettings().petVisible
 }
 
+/** 메인 창에는 settings:changed로 전해진다 */
 export function setPetVisible(visible: boolean): void {
-  if (visible === petVisible) return
-  petVisible = visible
+  if (visible === isPetVisible()) return
+  updateSettings({ petVisible: visible })
   for (const listener of listeners) listener(visible)
-  broadcast(IPC.petVisibleChanged, visible)
 }
 
 export function onPetVisibleChange(listener: Listener): void {
@@ -23,6 +23,5 @@ export function onPetVisibleChange(listener: Listener): void {
 }
 
 export function registerPetVisibilityIpc(): void {
-  handle(IPC.petGetVisible, { allow: ['main', 'overlay'], payload: z.undefined() }, isPetVisible)
   handle(IPC.petSetVisible, { allow: ['main'], payload: z.boolean() }, setPetVisible)
 }

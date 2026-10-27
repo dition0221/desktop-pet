@@ -40,8 +40,9 @@ export function handle<S extends z.ZodType>(
   })
 }
 
-export function broadcast(channel: string, payload: unknown): void {
+export function broadcast(channel: string, payload: unknown, to: readonly WindowRole[]): void {
   for (const window of BrowserWindow.getAllWindows()) {
-    if (windowRoles.has(window.webContents.id)) window.webContents.send(channel, payload)
+    const role = windowRoles.get(window.webContents.id)
+    if (role && to.includes(role)) window.webContents.send(channel, payload)
   }
 }
