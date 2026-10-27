@@ -2,7 +2,8 @@ import type { PetSprite } from '@preload/api'
 import { usePetAnimation } from '@renderer/overlay/hooks/usePetAnimation'
 import { usePetSpeech } from '@renderer/overlay/hooks/usePetSpeech'
 import SpeechBubble, { type BubbleAlign } from '@renderer/overlay/SpeechBubble'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useMainValue } from '@renderer/shared/hooks/useMainValue'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 /** 말풍선 최대 폭(max-w-64)의 절반 — 펫이 화면 끝에서 이보다 가까우면 말풍선을 안쪽으로 편다 */
 const BUBBLE_HALF_WIDTH = 128
@@ -14,20 +15,18 @@ const REACTION_KEYFRAMES: Keyframe[] = [
   { transform: 'scale(1, 1)' }
 ]
 
+function getSpriteOrFallback(): Promise<PetSprite | null> {
+  return window.api.pet.getSprite().catch(() => null)
+}
+
 function Pet(): React.JSX.Element {
   const petRef = useRef<HTMLButtonElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   // undefined = 불러오는 중, null = 팩을 못 읽어 임시 사각형
-  const [sprite, setSprite] = useState<PetSprite | null>()
+  const sprite = useMainValue<PetSprite | null>(getSpriteOrFallback, window.api.pet.onSpriteChange)
   const [bubbleAlign, setBubbleAlign] = useState<BubbleAlign>('center')
   const speech = usePetSpeech()
   usePetAnimation(petRef, bodyRef, sprite)
-
-  useEffect(() => {
-    const unsubscribe = window.api.pet.onSpriteChange(setSprite)
-    void window.api.pet.getSprite().then(setSprite, () => setSprite(null))
-    return unsubscribe
-  }, [])
 
   // 말풍선이 떠 있는 동안 메인이 펫을 세워 두므로 띄울 때 한 번만 정한다
   useLayoutEffect(() => {
