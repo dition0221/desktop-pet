@@ -1,4 +1,4 @@
-import { handle } from '@main/ipc'
+import { broadcast, handle } from '@main/ipc'
 import { showMainWindow } from '@main/mainWindow'
 import { forEachOverlay, onOverlaysSynced, setOverlaysIgnoreMouse } from '@main/overlayWindows'
 import { toPetSprite } from '@main/pack/library'
@@ -147,7 +147,7 @@ function registerPetIpc(): void {
 export function setPetPack(pack: PackManifest): void {
   replan(() => {
     applyPack(pack)
-    forEachOverlay((window) => window.webContents.send(IPC.petSpriteChanged, sprite))
+    broadcast(IPC.petSpriteChanged, sprite, ['overlay'])
   })
 }
 

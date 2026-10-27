@@ -4,6 +4,7 @@ import { broadcast, handle } from '@main/ipc'
 import { DEFAULT_PACK_ID } from '@main/pack/library'
 import { PACK_ID_PATTERN } from '@main/pack/schema'
 import { readJsonFile, userDataFile, writeJsonFile } from '@main/store/jsonFile'
+import { createSerialQueue } from '@main/store/serialQueue'
 import type { Settings } from '@preload/api'
 import { IPC } from '@preload/channels'
 import { z } from 'zod'
@@ -31,7 +32,7 @@ const settingsSchema = z.object({
 }) satisfies z.ZodType<Settings>
 
 let settings: Settings
-let writing: Promise<unknown> = Promise.resolve()
+const enqueueWrite = createSerialQueue()
 const changeListeners = new Set<(settings: Settings) => void>()
 
 /** 창을 만들기 전에 한 번 — 키가 없는 파일이라 깨졌으면 기본값으로 시작해 다음 저장 때 덮어쓴다 */
@@ -52,9 +53,9 @@ export function updateSettings(patch: Partial<Settings>): void {
   settings = { ...settings, ...patch }
   const snapshot = settings
   // 연달아 바뀌어도 마지막 값이 마지막에 쓰이도록 순서대로 쓴다
-  writing = writing
-    .then(() => writeJsonFile(userDataFile(SETTINGS_FILE), snapshot))
-    .catch((error) => console.error('[settings] write failed', error))
+  enqueueWrite(() => writeJsonFile(userDataFile(SETTINGS_FILE), snapshot)).catch((error) =>
+    console.error('[settings] write failed', error)
+  )
   broadcast(IPC.settingsChanged, settings, ['main'])
   for (const listener of changeListeners) listener(settings)
 }
