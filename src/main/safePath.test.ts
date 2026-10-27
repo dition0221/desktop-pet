@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { resolveInsideRoot } from '@main/safePath'
+import { isInsideRoot, resolveInsideRoot } from '@main/safePath'
 import { describe, expect, it } from 'vitest'
 
 const ROOT = 'C:\\app\\renderer'
@@ -31,5 +31,32 @@ describe('resolveInsideRoot', () => {
   it('잘못된 인코딩과 NUL 문자는 거부한다', () => {
     expect(resolveInsideRoot(ROOT, '/%E0%A4%A')).toBeNull()
     expect(resolveInsideRoot(ROOT, '/index.html%00.png')).toBeNull()
+  })
+
+  it('Windows가 다르게 해석하는 이름은 거부한다', () => {
+    expect(resolveInsideRoot(ROOT, '/sprite.png:hidden')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/sprite.png%3a%3a$DATA')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/secrets.json.')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/secrets.json%20')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/assets./a.png')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/CON')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/assets/nul.png')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/com1.txt')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/com%C2%B9.png')).toBeNull()
+    expect(resolveInsideRoot(ROOT, '/CONIN$')).toBeNull()
+  })
+
+  it('장치 이름과 비슷한 일반 이름은 허용한다', () => {
+    expect(resolveInsideRoot(ROOT, '/console.png')).toBe(join(ROOT, 'console.png'))
+    expect(resolveInsideRoot(ROOT, '/nullable.js')).toBe(join(ROOT, 'nullable.js'))
+  })
+})
+
+describe('isInsideRoot', () => {
+  it('실제 경로가 root 밖이면 거부한다', () => {
+    expect(isInsideRoot(ROOT, 'C:\\app\\renderer\\a.png')).toBe(true)
+    expect(isInsideRoot(ROOT, 'C:\\app\\secrets.json')).toBe(false)
+    expect(isInsideRoot(ROOT, 'D:\\renderer\\a.png')).toBe(false)
+    expect(isInsideRoot(ROOT, ROOT)).toBe(false)
   })
 })

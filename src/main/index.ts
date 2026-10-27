@@ -1,13 +1,15 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { DEV_SERVER_URL } from '@main/appPage'
-import { handleAppProtocol, registerAppScheme } from '@main/appProtocol'
+import { APP_SCHEME_PRIVILEGES, handleAppProtocol } from '@main/appProtocol'
 import { createMainWindow, showMainWindow } from '@main/mainWindow'
 import { startOverlayWindows } from '@main/overlayWindows'
+import { DEFAULT_PACK_ID, loadPack } from '@main/pack/library'
+import { handlePackProtocol, PACK_SCHEME_PRIVILEGES } from '@main/pack/protocol'
 import { startPet } from '@main/pet/controller'
 import { registerPetVisibilityIpc } from '@main/pet/visibility'
 import { denyAllPermissions, registerWebContentsGuards } from '@main/security'
 import { createTray } from '@main/tray'
-import { app, Menu } from 'electron'
+import { app, Menu, protocol } from 'electron'
 
 const APP_USER_MODEL_ID = 'io.github.dition0221.desktop-pet'
 
@@ -24,14 +26,16 @@ if (app.requestSingleInstanceLock()) {
 }
 
 function bootstrap(): void {
-  registerAppScheme()
+  // app ready 전에 한 번만 호출 가능 — 커스텀 스킴은 여기서 함께 등록
+  protocol.registerSchemesAsPrivileged([APP_SCHEME_PRIVILEGES, PACK_SCHEME_PRIVILEGES])
   registerWebContentsGuards()
   app.on('second-instance', showMainWindow)
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     electronApp.setAppUserModelId(APP_USER_MODEL_ID)
     denyAllPermissions()
     if (!DEV_SERVER_URL) handleAppProtocol()
+    handlePackProtocol()
 
     // autoHideMenuBar는 숨기기만 함 — 설치본에서 Alt로 기본 메뉴(Reload·DevTools)가 열리지 않게 제거
     if (!is.dev) Menu.setApplicationMenu(null)
@@ -41,10 +45,12 @@ function bootstrap(): void {
       optimizer.watchWindowShortcuts(window)
     })
 
+    // 오버레이가 첫 요청을 보내기 전에 팩을 읽고 펫 IPC를 연다
+    const pack = await loadPack(DEFAULT_PACK_ID)
     registerPetVisibilityIpc()
     createMainWindow()
     startOverlayWindows()
-    startPet()
+    startPet(pack)
     createTray()
   })
 }
