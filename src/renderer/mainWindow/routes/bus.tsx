@@ -185,7 +185,8 @@ function BusExplorer({ settings }: { settings: Settings }): React.JSX.Element {
     }
     const result = await window.api.bus.addFavorite({
       stop,
-      route: route && { id: route.id, number: route.number }
+      route: route && { id: route.id, number: route.number },
+      alert: false
     })
     if (!result.ok) setError(`즐겨찾기는 ${result.limit}개까지 저장할 수 있어요`)
   }

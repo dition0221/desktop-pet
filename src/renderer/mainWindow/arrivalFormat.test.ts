@@ -36,16 +36,16 @@ describe('favoriteArrivals', () => {
   const stop = { arrivals: [arrival('A', 60), arrival('B', 120)], updatedAt: 0, error: null }
 
   it('정류소 즐겨찾기는 모든 노선을 보여 준다', () => {
-    const favorite: BusFavorite = { stop: STOP, route: null }
+    const favorite: BusFavorite = { stop: STOP, route: null, alert: false }
     expect(favoriteArrivals(favorite, stop)).toHaveLength(2)
   })
 
   it('노선 즐겨찾기는 그 노선만 보여 준다', () => {
-    const favorite: BusFavorite = { stop: STOP, route: { id: 'B', number: 'B' } }
+    const favorite: BusFavorite = { stop: STOP, route: { id: 'B', number: 'B' }, alert: false }
     expect(favoriteArrivals(favorite, stop).map((a) => a.routeId)).toEqual(['B'])
   })
 
   it('아직 조회 전이면 빈 목록', () => {
-    expect(favoriteArrivals({ stop: STOP, route: null }, undefined)).toEqual([])
+    expect(favoriteArrivals({ stop: STOP, route: null, alert: false }, undefined)).toEqual([])
   })
 })

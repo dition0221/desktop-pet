@@ -37,12 +37,16 @@ const api: DesktopPetApi = {
       ipcRenderer.invoke(IPC.busRemoveFavorite, { stopId, routeId }),
     getArrivals: () => ipcRenderer.invoke(IPC.busGetArrivals),
     onArrivalsChange: (listener) => subscribe(IPC.busArrivalsChanged, listener),
-    setPollSettings: (settings) => ipcRenderer.invoke(IPC.busSetPollSettings, settings)
+    setPollSettings: (settings) => ipcRenderer.invoke(IPC.busSetPollSettings, settings),
+    setFavoriteAlert: (stopId, routeId, enabled) =>
+      ipcRenderer.invoke(IPC.busSetFavoriteAlert, { stopId, routeId, enabled })
   },
   pet: {
     setVisible: (visible) => ipcRenderer.invoke(IPC.petSetVisible, visible),
     getSprite: () => ipcRenderer.invoke(IPC.petGetSprite),
     onSpriteChange: (listener) => subscribe(IPC.petSpriteChanged, listener),
+    onSpeech: (listener) => subscribe(IPC.petSpeech, listener),
+    getRecentSpeeches: () => ipcRenderer.invoke(IPC.petGetRecentSpeeches),
     getMotion: () => ipcRenderer.invoke(IPC.petGetMotion),
     onMotionChange: (listener) => subscribe(IPC.petMotionChanged, listener),
     openMainWindow: () => ipcRenderer.invoke(IPC.petOpenMainWindow),

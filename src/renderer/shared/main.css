@@ -13,6 +13,22 @@
   --color-primary-800: #005382;
 }
 
+@theme {
+  --animate-bubble-in: bubble-in 180ms ease-out;
+
+  /* translate 속성은 -translate-x-1/2 정렬과 겹쳐 덮어쓰므로 transform으로 움직인다 */
+  @keyframes bubble-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 @layer base {
   /* Tailwind v4 preflight는 버튼 커서를 default로 되돌림 — 프로젝트 기본은 pointer */
   button:not(:disabled),

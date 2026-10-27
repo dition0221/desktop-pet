@@ -8,6 +8,7 @@ import { startOverlayWindows } from '@main/overlayWindows'
 import { handlePackProtocol, PACK_SCHEME_PRIVILEGES } from '@main/pack/protocol'
 import { loadSelectedPack, registerPackIpc } from '@main/pack/selection'
 import { startPet } from '@main/pet/controller'
+import { registerSpeechIpc } from '@main/pet/speech'
 import { registerPetVisibilityIpc } from '@main/pet/visibility'
 import { denyAllPermissions, registerWebContentsGuards } from '@main/security'
 import { registerSecretsIpc } from '@main/store/secrets'
@@ -57,6 +58,7 @@ function bootstrap(): void {
     registerBusIpc()
     registerPackIpc()
     registerPetVisibilityIpc()
+    registerSpeechIpc()
     createMainWindow()
     startArrivalPoller()
     startOverlayWindows()

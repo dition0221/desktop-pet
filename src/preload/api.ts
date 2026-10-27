@@ -60,6 +60,8 @@ export interface BusRouteStop extends BusStop {
 export interface BusFavorite {
   stop: BusStop
   route: Pick<BusRoute, 'id' | 'number'> | null
+  /** 노선 즐겨찾기만 켤 수 있다 — 정류소 전체 노선을 알리면 말풍선이 쏟아진다 */
+  alert: boolean
 }
 
 export type BusErrorCode =
@@ -118,8 +120,17 @@ export interface ArrivalsSnapshot {
 
 export interface BusPollSettings {
   intervalSec: 30 | 60 | 120 | 300
-  /** `HH:MM` — end가 start보다 이르면 자정을 넘는다 */
+  /** `HH:MM` — end가 start보다 이르면 자정을 넘고, 같으면 하루 종일 */
   activeHours: { start: string; end: string }
+  /** 도착 몇 분 전에 펫이 알려 줄지 */
+  alertMinutes: 3 | 5 | 10 | 15
+}
+
+export interface PetSpeech {
+  /** 같은 말풍선을 두 번 띄우지 않게 — 구독과 늦게 가져온 최근 말풍선이 겹칠 수 있다 */
+  id: number
+  text: string
+  durationMs: number
 }
 
 /** stop·route는 TAGO, arrival은 대전시 도착정보 */
@@ -189,6 +200,8 @@ export interface DesktopPetApi {
     getArrivals(): Promise<ArrivalsSnapshot>
     onArrivalsChange(listener: (snapshot: ArrivalsSnapshot) => void): () => void
     setPollSettings(settings: BusPollSettings): Promise<void>
+    /** 알림이 켜진 즐겨찾기는 메인 창을 닫아도 운행 시간 동안 조회한다 */
+    setFavoriteAlert(stopId: string, routeId: string, enabled: boolean): Promise<void>
   }
   pet: {
     /** 메인 창에서만 허용 — 현재 값은 settings.petVisible */
@@ -196,6 +209,10 @@ export interface DesktopPetApi {
     /** 오버레이에서만 허용, 팩을 못 읽으면 null */
     getSprite(): Promise<PetSprite | null>
     onSpriteChange(listener: (sprite: PetSprite) => void): () => void
+    /** 오버레이 전용 — 버스 도착 알림 등 펫 말풍선 */
+    onSpeech(listener: (speech: PetSpeech) => void): () => void
+    /** 오버레이 전용 — 페이지가 뜨기 전에 보낸 말풍선을 놓치지 않게 */
+    getRecentSpeeches(): Promise<PetSpeech[]>
     /** 오버레이에서만 허용 */
     getMotion(): Promise<PetMotion | null>
     onMotionChange(listener: (motion: PetMotion) => void): () => void
