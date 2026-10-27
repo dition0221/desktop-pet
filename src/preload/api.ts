@@ -83,7 +83,6 @@ export type AddFavoriteResult = { ok: true } | { ok: false; reason: 'limit'; lim
 export interface BusArrival {
   routeId: string
   routeNumber: string
-  routeType: string | null
   /** 응답을 받은 시각(`StopArrivals.updatedAt`) 기준 남은 시간 */
   secondsLeft: number
   stopsLeft: number | null

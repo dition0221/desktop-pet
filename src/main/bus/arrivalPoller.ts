@@ -13,7 +13,7 @@ import { getSettings, onSettingsChange } from '@main/store/settings'
 import type { ArrivalPollStatus, ArrivalsSnapshot, BusErrorCode } from '@preload/api'
 import { IPC } from '@preload/channels'
 
-/** 개발계정은 API당 일 10,000건 — 키 테스트·지도 조회 몫을 남긴다 */
+/** 대전시 도착정보 개발계정은 일 10,000건 — 키 테스트 몫을 남긴다 */
 const DAILY_ARRIVAL_BUDGET = 8000
 /** 다시 불러도 낫지 않는 오류 — 키를 바꿀 때까지 멈춘다 */
 const KEY_ERRORS: ReadonlySet<BusErrorCode> = new Set(['no-key', 'invalid-key', 'not-allowed'])

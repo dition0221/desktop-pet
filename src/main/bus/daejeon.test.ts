@@ -1,8 +1,9 @@
 import { parseDaejeonArrivals } from '@main/bus/daejeon'
-import { TagoError, toBusErrorCode } from '@main/bus/tago'
+import { PortalError, toBusErrorCode } from '@main/bus/portal'
 import { describe, expect, it } from 'vitest'
 
-const NOW = new Date(2026, 9, 28, 6, 41, 30).getTime()
+/** 서버 시각 2026-10-28 06:41:30 KST — PC 시간대와 상관없이 같은 값 */
+const SERVER_NOW = Date.parse('2026-10-28T06:41:30+09:00')
 
 function item(fields: Record<string, string>): string {
   const base: Record<string, string> = {
@@ -11,7 +12,7 @@ function item(fields: Record<string, string>): string {
     DESTINATION: '안산동',
     EXTIME_MIN: '10',
     EXTIME_SEC: '580',
-    INFO_OFFER_TM: '2026-10-28 06:41:26',
+    INFO_OFFER_TM: '2026-10-28 06:41:30',
     MSG_TP: '03',
     ROUTE_CD: '30300036',
     ROUTE_NO: '101',
@@ -31,11 +32,10 @@ function response(items: string[], headerCd = '0'): string {
 
 describe('parseDaejeonArrivals', () => {
   it('실측 응답 형식을 도착 정보로 바꾼다', () => {
-    expect(parseDaejeonArrivals(response([item({})]), NOW)).toEqual([
+    expect(parseDaejeonArrivals(response([item({})]), SERVER_NOW)).toEqual([
       {
         routeId: 'DJB30300036',
         routeNumber: '101',
-        routeType: '간선버스',
         secondsLeft: 580,
         stopsLeft: 6,
         vehicleId: '대전75자3333',
@@ -44,41 +44,72 @@ describe('parseDaejeonArrivals', () => {
     ])
   })
 
+  it('남은 시간은 정보 시각부터 서버 시각까지 흐른 만큼 뺀다', () => {
+    const [arrival] = parseDaejeonArrivals(
+      response([item({ INFO_OFFER_TM: '2026-10-28 06:40:30' })]),
+      SERVER_NOW
+    )
+    expect(arrival.secondsLeft).toBe(520)
+  })
+
+  it('서버 시각이 없으면 응답에서 가장 최근 정보 시각을 기준으로 삼는다', () => {
+    const items = [
+      item({ ROUTE_NO: '101', INFO_OFFER_TM: '2026-10-28 06:41:30' }),
+      item({ ROUTE_NO: '102', INFO_OFFER_TM: '2026-10-28 06:40:30', EXTIME_SEC: '300' })
+    ]
+    const arrivals = parseDaejeonArrivals(response(items), null)
+    expect(arrivals.map((a) => [a.routeNumber, a.secondsLeft])).toEqual([
+      ['101', 580],
+      ['102', 240]
+    ])
+  })
+
   it('결과 없음(headerCd 4)은 빈 목록이다', () => {
     const empty = `<ServiceResult><msgHeader><headerCd>4</headerCd><headerMsg>결과가 없습니다.</headerMsg></msgHeader><msgBody/></ServiceResult>`
-    expect(parseDaejeonArrivals(empty, NOW)).toEqual([])
+    expect(parseDaejeonArrivals(empty, SERVER_NOW)).toEqual([])
   })
 
   it('갱신이 멈춘 차량은 버린다', () => {
     const items = [
-      item({ ROUTE_NO: '315', MSG_TP: '07', INFO_OFFER_TM: '2026-10-28 06:31:16' }),
+      item({ ROUTE_NO: '315', MSG_TP: '07' }),
       item({ ROUTE_NO: '316', INFO_OFFER_TM: '2026-10-28 06:30:00' }),
       item({ ROUTE_NO: '101' })
     ]
-    expect(parseDaejeonArrivals(response(items), NOW).map((a) => a.routeNumber)).toEqual(['101'])
+    const arrivals = parseDaejeonArrivals(response(items), SERVER_NOW)
+    expect(arrivals.map((a) => a.routeNumber)).toEqual(['101'])
   })
 
-  it('모르는 노선 유형은 표시하지 않고, 형식이 다른 항목은 버린다', () => {
-    const items = [item({ ROUTE_TP: '9' }), item({ EXTIME_SEC: '' }), item({ ROUTE_CD: 'x' })]
-    const arrivals = parseDaejeonArrivals(response(items), NOW)
-    expect(arrivals).toHaveLength(1)
-    expect(arrivals[0].routeType).toBeNull()
+  it('형식이 다른 항목은 그 항목만 버린다', () => {
+    const items = [item({ EXTIME_SEC: '' }), item({ ROUTE_CD: 'x' }), item({})]
+    expect(parseDaejeonArrivals(response(items), SERVER_NOW)).toHaveLength(1)
   })
 
-  it('XML 엔티티를 풀어 행선지를 읽는다', () => {
-    const [arrival] = parseDaejeonArrivals(response([item({ DESTINATION: 'A&amp;B' })]), NOW)
-    expect(arrival.destination).toBe('A&B')
+  it('XML 엔티티를 풀고, 잘못된 문자 참조는 그대로 둔다', () => {
+    const items = [
+      item({ DESTINATION: 'A&amp;B&#X41;' }),
+      item({ CAR_REG_NO: 'x', DESTINATION: '&#x110000;&constructor;' })
+    ]
+    const arrivals = parseDaejeonArrivals(response(items), SERVER_NOW)
+    expect(arrivals.map((a) => a.destination)).toEqual(['A&BA', '&#x110000;&constructor;'])
+  })
+
+  it('닫는 태그가 없는 큰 응답도 금방 끝난다', () => {
+    const broken = `<ServiceResult><msgHeader><headerCd>0</headerCd></msgHeader>${'<itemList>'.repeat(50_000)}`
+    const startedAt = performance.now()
+    expect(parseDaejeonArrivals(broken, SERVER_NOW)).toEqual([])
+    expect(performance.now() - startedAt).toBeLessThan(500)
   })
 
   it('게이트웨이 인증 오류와 서비스 오류를 구분한다', () => {
     const gateway =
       '<OpenAPI_ServiceResponse><cmmMsgHeader><returnAuthMsg>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</returnAuthMsg><returnReasonCode>30</returnReasonCode></cmmMsgHeader></OpenAPI_ServiceResponse>'
-    expect(() => parseDaejeonArrivals(gateway, NOW)).toThrow(TagoError)
+    let caught: unknown
     try {
-      parseDaejeonArrivals(gateway, NOW)
+      parseDaejeonArrivals(gateway, SERVER_NOW)
     } catch (error) {
-      expect(toBusErrorCode(error)).toBe('invalid-key')
+      caught = error
     }
-    expect(() => parseDaejeonArrivals(response([], '2'), NOW)).toThrow(TagoError)
+    expect(toBusErrorCode(caught)).toBe('invalid-key')
+    expect(() => parseDaejeonArrivals(response([], '2'), SERVER_NOW)).toThrow(PortalError)
   })
 })

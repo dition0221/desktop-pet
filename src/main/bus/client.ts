@@ -1,16 +1,18 @@
 import { DAEJEON_ARRIVAL_URL, parseDaejeonArrivals } from '@main/bus/daejeon'
 import {
-  DAEJEON_CITY_CODE,
-  isKnownTagoError,
+  isKnownPortalError,
   maskServiceKey,
   normalizeServiceKey,
+  PortalError,
+  toBusErrorCode
+} from '@main/bus/portal'
+import {
+  DAEJEON_CITY_CODE,
   parseTagoPage,
   routeItemSchema,
   routeStopItemSchema,
   stopItemSchema,
-  TagoError,
-  type TagoPage,
-  toBusErrorCode
+  type TagoPage
 } from '@main/bus/tago'
 import { readSecret } from '@main/store/secrets'
 import type {
@@ -28,6 +30,8 @@ import { z } from 'zod'
 
 const TAGO_BASE_URL = 'https://apis.data.go.kr/1613000'
 const REQUEST_TIMEOUT_MS = 10_000
+/** 정상 응답은 수십 KB — 비정상적으로 큰 응답을 파싱하다 메인 프로세스가 멈추지 않게 */
+const MAX_RESPONSE_CHARS = 512 * 1024
 const PAGE_SIZE = '100'
 /** 순환 노선은 경유 정류소가 100개를 넘을 수 있어 넉넉히 받는다 */
 const ROUTE_PATH_PAGE_SIZE = '300'
@@ -54,12 +58,12 @@ interface CacheEntry<T> {
   savedAt: number
 }
 
-/** 저장된 키로 부르고, 로그에는 키를 가린 원인만 남긴다 */
+/** 저장된 키로 부르고, 로그에는 키를 가린 원인만 남긴다. 파서에는 서버 시각(Date 헤더)도 넘긴다 */
 async function request<T>(
   label: string,
   url: string,
   params: Record<string, string>,
-  parse: (text: string) => T
+  parse: (text: string, serverNow: number | null) => T
 ): Promise<T> {
   const savedKey = await readSecret('busServiceKey')
   if (!savedKey) throw new BusRequestError('no-key')
@@ -67,20 +71,26 @@ async function request<T>(
 
   const query = new URLSearchParams({ ...params, serviceKey: key })
   let text: string
+  let serverNow: number | null
   try {
     const response = await net.fetch(`${url}?${query}`, {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
     })
     text = await response.text()
+    const date = Date.parse(response.headers.get('date') ?? '')
+    serverNow = Number.isNaN(date) ? null : date
   } catch (error) {
     console.error(`[bus] ${label} failed:`, maskServiceKey(String(error), key))
     throw new BusRequestError('network')
   }
 
   try {
-    return parse(text)
+    if (text.length > MAX_RESPONSE_CHARS) {
+      throw new PortalError('too-large', `${text.length} chars`)
+    }
+    return parse(text, serverNow)
   } catch (error) {
-    if (error instanceof TagoError && !isKnownTagoError(error)) {
+    if (error instanceof PortalError && !isKnownPortalError(error)) {
       const detail = maskServiceKey(`${error.code} ${error.message}`, key)
       console.error(`[bus] ${label} unexpected response:`, detail)
     }
@@ -103,8 +113,8 @@ function requestTago<T>(
 function requestDaejeonArrivals(stopId: string): Promise<BusArrival[]> {
   // 대전시 정류소 ID는 TAGO ID에서 `DJB`를 뗀 숫자
   const params = { BusStopID: stopId.replace(/^DJB/, '') }
-  return request('arrival', DAEJEON_ARRIVAL_URL, params, (text) =>
-    parseDaejeonArrivals(text, Date.now())
+  return request('arrival', DAEJEON_ARRIVAL_URL, params, (text, serverNow) =>
+    parseDaejeonArrivals(text, serverNow)
   )
 }
 
@@ -122,7 +132,7 @@ async function toResult<T>(task: () => Promise<T>): Promise<BusResult<T>> {
     return { ok: true, data: await task() }
   } catch (error) {
     if (error instanceof BusRequestError) return { ok: false, error: error.code }
-    if (!(error instanceof TagoError)) console.error('[bus] unexpected error:', String(error))
+    if (!(error instanceof PortalError)) console.error('[bus] unexpected error:', String(error))
     return { ok: false, error: toBusErrorCode(error) }
   }
 }

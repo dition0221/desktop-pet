@@ -6,7 +6,6 @@ function arrival(routeId: string, secondsLeft: number): BusArrival {
   return {
     routeId,
     routeNumber: routeId,
-    routeType: null,
     secondsLeft,
     stopsLeft: 2,
     vehicleId: null,

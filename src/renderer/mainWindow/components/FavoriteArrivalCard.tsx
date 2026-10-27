@@ -57,7 +57,7 @@ function FavoriteArrivalCard({
         <ul className={`flex flex-col gap-1.5 ${stop?.error ? 'opacity-50' : ''}`}>
           {rows.slice(0, MAX_ROWS).map(({ arrival, label }) => (
             <li
-              key={`${arrival.routeId}:${arrival.secondsLeft}`}
+              key={arrival.vehicleId ?? `${arrival.routeId}:${arrival.secondsLeft}`}
               className="flex items-baseline justify-between gap-2 text-sm"
             >
               <span className="truncate">
