@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { showMainWindow } from '@main/mainWindow'
-import { isPetVisible, onPetVisibleChange, setPetVisible } from '@main/petVisibility'
+import { isPetVisible, onPetVisibleChange, setPetVisible } from '@main/pet/visibility'
 import { app, Menu, Tray } from 'electron'
 
 const TRAY_ICON_PATH = join(app.getAppPath(), 'resources/icon.png')

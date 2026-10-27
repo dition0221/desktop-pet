@@ -16,7 +16,11 @@ const api: DesktopPetApi = {
   pet: {
     getVisible: () => ipcRenderer.invoke(IPC.petGetVisible),
     setVisible: (visible) => ipcRenderer.invoke(IPC.petSetVisible, visible),
-    onVisibleChange: (listener) => subscribe(IPC.petVisibleChanged, listener)
+    onVisibleChange: (listener) => subscribe(IPC.petVisibleChanged, listener),
+    getMotion: () => ipcRenderer.invoke(IPC.petGetMotion),
+    onMotionChange: (listener) => subscribe(IPC.petMotionChanged, listener),
+    openMainWindow: () => ipcRenderer.invoke(IPC.petOpenMainWindow),
+    showContextMenu: () => ipcRenderer.invoke(IPC.petShowContextMenu)
   }
 }
 

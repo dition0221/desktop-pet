@@ -29,14 +29,14 @@ interface HandleOptions<S extends z.ZodType> {
 export function handle<S extends z.ZodType>(
   channel: string,
   { allow, payload }: HandleOptions<S>,
-  handler: (payload: z.output<S>) => unknown
+  handler: (payload: z.output<S>, event: IpcMainInvokeEvent) => unknown
 ): void {
   ipcMain.handle(channel, (event, ...args: unknown[]) => {
     const role = resolveSenderRole(event)
     if (!role || !allow.includes(role)) throw new Error(`${channel}: sender not allowed`)
     const parsed = args.length <= 1 ? payload.safeParse(args[0]) : null
     if (!parsed?.success) throw new Error(`${channel}: invalid payload`)
-    return handler(parsed.data)
+    return handler(parsed.data, event)
   })
 }
 

@@ -2,5 +2,9 @@
 export const IPC = {
   petGetVisible: 'pet:get-visible',
   petSetVisible: 'pet:set-visible',
-  petVisibleChanged: 'pet:visible-changed'
+  petVisibleChanged: 'pet:visible-changed',
+  petGetMotion: 'pet:get-motion',
+  petMotionChanged: 'pet:motion-changed',
+  petOpenMainWindow: 'pet:open-main-window',
+  petShowContextMenu: 'pet:show-context-menu'
 } as const

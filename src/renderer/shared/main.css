@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-pet-walk: pet-walk 0.4s ease-in-out infinite;
+
+  @keyframes pet-walk {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -3px;
+    }
+  }
+}
+
 /* Tailwind v4 preflight는 버튼 커서를 default로 되돌림 — 프로젝트 기본은 pointer */
 @layer base {
   button:not(:disabled),
