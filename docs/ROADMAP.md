@@ -62,10 +62,10 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
   - [x] 임시 스프라이트가 작업표시줄 위에서 걷기·멈추기 반복, 화면 끝에서 방향 전환
   - [ ] 입력 매핑: 클릭 = 반응, 더블클릭 = 메인 창 열기, 우클릭 = 컨텍스트 메뉴(메인 창 / 숨기기), 누른 채 일정 거리 이상 이동 = 드래그(Phase 3)
 - 펫 팩 최소 구조 (나중에 갈아엎지 않도록 처음부터 팩으로 로드)
-  - [ ] `pack.json` 스키마 (Zod): `schemaVersion`, `id`, `name`, 스프라이트 시트, 애니메이션별 프레임 — `persona` / 고정 음성 클립 / TTS 설정은 optional 필드로 예약
-  - [ ] 팩 경로: 개발 = 저장소 `packs/`, 설치본 = `userData/packs/` (`_example`은 electron-builder `extraResources`로 동봉)
-  - [ ] 팩 에셋 로딩: `protocol.registerSchemesAsPrivileged` + `protocol.handle('pack')`, 팩 루트 밖 경로 차단(path traversal), CSP `img-src` / `media-src`에 `pack:` 추가
-  - [ ] `packs/_example` 예제 팩 (직접 그린 임시 그림, CC0)
+  - [x] `pack.json` 스키마 (Zod): `schemaVersion`, `id`, `name`, 스프라이트 시트, 애니메이션별 프레임 — `persona` / 고정 음성 클립 / TTS 설정은 optional 필드로 예약
+  - [x] 팩 경로: 동봉 팩 = 개발은 저장소 `packs/`, 설치본은 `resources/packs/` (electron-builder `extraResources`) · 사용자 팩 = `userData/packs/` — 같은 id는 동봉 팩 우선
+  - [x] 팩 에셋 로딩: `protocol.registerSchemesAsPrivileged` + `protocol.handle('pack')`, 팩 루트 밖 경로 차단(path traversal), CSP `img-src` / `media-src`에 `pack:` 추가
+  - [x] `packs/_example` 예제 팩 (직접 그린 임시 그림, CC0)
 - 메인 창
   - [ ] 사이드바 + 페이지 레이아웃: 홈 / 버스 / 대화 / 펫 / 설정 (내용은 빈 페이지)
 - 창 간 동기화
@@ -191,7 +191,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 | 펫 창 방식           | **디스플레이당 투명 오버레이 1개 + 클릭 통과**                                        | 작은 창을 `setPosition`으로 옮기는 방식은 Windows에서 움직임이 끊겨 보임. 모니터별로 창을 두면 다중 모니터·배율 차이에 대응 가능                                                      |
 | 펫 상태 소유         | **메인 프로세스** (전역 DIP 좌표)                                                     | 모니터 간 이동, 오버레이·메인 창 동기화를 한곳에서 처리                                                                                                                               |
 | 펫 입력              | 클릭 = 반응, 더블클릭 = 메인 창, 우클릭 = 메뉴, 누른 채 이동 = 드래그                 | 같은 입력에 기능이 겹치지 않도록 처음부터 고정                                                                                                                                        |
-| 펫 팩 위치 · 로딩    | 개발 `packs/`, 설치본 `userData/packs/`, `pack://` 프로토콜                           | 설치본의 앱 내부(asar)는 읽기 전용이라 사용자 팩 추가 불가. sandbox + CSP 환경에서 `file://` 대신 팩 폴더만 노출                                                                      |
+| 펫 팩 위치 · 로딩    | 동봉 팩 + 사용자 팩 `userData/packs/`, `pack://` 프로토콜                             | 설치본의 앱 내부(asar)는 읽기 전용이라 사용자 팩 추가 불가. sandbox + CSP 환경에서 `file://` 대신 팩 폴더만 노출                                                                      |
 | 개발 순서            | **골조 → 버스 위젯 먼저**                                                             | TTS는 병렬 트랙이라 기다릴 필요 없음. 빠르게 실사용 가능한 v0.1 확보                                                                                                                  |
 | 버스 폴링            | **메인 프로세스 스케줄러**                                                            | 메인 창을 닫아도 펫 알림이 동작해야 함. API 호출 한도를 한곳에서 관리                                                                                                                 |
 | 패키지 매니저 / 린트 | **pnpm + Biome** (ESLint + Prettier 대신)                                             | 설치 빠름, 린트·포맷을 도구 하나로 처리, 설정 단순                                                                                                                                    |
@@ -220,7 +220,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 - [x] 엄격한 CSP, 앱 내 페이지 이동·새 창 차단 (`will-navigate`, `setWindowOpenHandler`)
 - [x] 권한 요청(카메라·마이크 등) 전부 거부 — 필요한 기능이 생기면 해당 권한만 허용
 - [x] 외부 링크는 `shell.openExternal` + https 허용 목록만
-- [ ] `pack://` 핸들러는 팩 루트 밖 경로 차단
+- [x] `pack://` 핸들러는 팩 루트 밖 경로 차단 (정션·대체 데이터 스트림·장치 이름 포함)
 - [x] Electron Fuses: RunAsNode · NodeOptions · inspect · GrantFileProtocolExtraPrivileges 비활성(렌더러는 `app://`로 서빙), asar 무결성 검사
 
 **API 키**
