@@ -15,7 +15,6 @@ function arrival(
   return {
     routeId,
     routeNumber: '612',
-    routeType: null,
     secondsLeft,
     stopsLeft: 3,
     vehicleId,
