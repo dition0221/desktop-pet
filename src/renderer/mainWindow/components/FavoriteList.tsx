@@ -1,5 +1,6 @@
 import type { BusFavorite } from '@preload/api'
 import CloseButton from '@renderer/mainWindow/components/CloseButton'
+import RouteBadge from '@renderer/mainWindow/components/RouteBadge'
 
 interface FavoriteListProps {
   favorites: BusFavorite[]
@@ -20,11 +21,7 @@ function FavoriteList({ favorites, onSelect, onRemove }: FavoriteListProps): Rea
             onClick={() => onSelect(favorite)}
             className="flex min-w-0 flex-1 items-baseline gap-1.5 px-2 py-1.5 text-left text-sm"
           >
-            {favorite.route && (
-              <span className="shrink-0 rounded bg-primary-100 px-1.5 font-semibold text-primary-800 text-xs">
-                {favorite.route.number}
-              </span>
-            )}
+            {favorite.route && <RouteBadge number={favorite.route.number} />}
             <span className="truncate">{favorite.stop.name}</span>
             <span className="shrink-0 text-neutral-400 text-xs">{favorite.stop.number}</span>
           </button>

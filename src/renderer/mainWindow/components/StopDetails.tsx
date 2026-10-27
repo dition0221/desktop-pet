@@ -1,4 +1,7 @@
 import type { BusRoute, BusStop } from '@preload/api'
+import { StarIcon } from '@renderer/mainWindow/components/Icons'
+import IconToggle from '@renderer/mainWindow/components/IconToggle'
+import SectionLabel from '@renderer/mainWindow/components/SectionLabel'
 import Spinner from '@renderer/mainWindow/components/Spinner'
 
 interface StopDetailsProps {
@@ -13,28 +16,6 @@ interface StopDetailsProps {
   onFitRoute(): void
 }
 
-function StarButton({
-  active,
-  label,
-  onClick
-}: {
-  active: boolean
-  label: string
-  onClick(): void
-}): React.JSX.Element {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={active}
-      onClick={onClick}
-      className={`shrink-0 rounded-md px-1.5 text-lg leading-7 transition-colors ${active ? 'text-primary-600 hover:text-primary-700' : 'text-neutral-300 hover:text-primary-500'}`}
-    >
-      {active ? '★' : '☆'}
-    </button>
-  )
-}
-
 function StopDetails(props: StopDetailsProps): React.JSX.Element {
   const { stop, routes, selectedRouteId } = props
 
@@ -45,15 +26,16 @@ function StopDetails(props: StopDetailsProps): React.JSX.Element {
           <p className="truncate font-semibold">{stop.name}</p>
           {stop.number && <p className="text-neutral-500 text-xs">정류소번호 {stop.number}</p>}
         </div>
-        <StarButton
+        <IconToggle
           active={props.favorite}
           label="정류소 즐겨찾기"
-          onClick={() => props.onToggleFavorite(null)}
+          onChange={() => props.onToggleFavorite(null)}
+          icon={StarIcon}
         />
       </div>
 
       <div className="flex h-6 items-center justify-between">
-        <p className="font-medium text-neutral-500 text-xs">지나는 노선</p>
+        <SectionLabel>지나는 노선</SectionLabel>
         {selectedRouteId && (
           <button
             type="button"
@@ -87,10 +69,11 @@ function StopDetails(props: StopDetailsProps): React.JSX.Element {
                 </span>
               )}
             </button>
-            <StarButton
+            <IconToggle
               active={props.favoriteRouteIds.has(route.id)}
               label={`${route.number}번 즐겨찾기`}
-              onClick={() => props.onToggleFavorite(route)}
+              onChange={() => props.onToggleFavorite(route)}
+              icon={StarIcon}
             />
           </li>
         ))}

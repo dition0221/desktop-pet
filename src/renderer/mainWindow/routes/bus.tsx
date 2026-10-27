@@ -11,7 +11,9 @@ import { BUS_ERROR_MESSAGES } from '@renderer/mainWindow/busErrorMessages'
 import BusMap, { type FocusRequest, type MapCenter } from '@renderer/mainWindow/components/BusMap'
 import Button from '@renderer/mainWindow/components/Button'
 import CloseButton from '@renderer/mainWindow/components/CloseButton'
+import ErrorText from '@renderer/mainWindow/components/ErrorText'
 import FavoriteList from '@renderer/mainWindow/components/FavoriteList'
+import SectionLabel from '@renderer/mainWindow/components/SectionLabel'
 import Spinner from '@renderer/mainWindow/components/Spinner'
 import StopDetails from '@renderer/mainWindow/components/StopDetails'
 import StopList from '@renderer/mainWindow/components/StopList'
@@ -264,11 +266,7 @@ function BusExplorer({ settings }: { settings: Settings }): React.JSX.Element {
           )}
         </div>
 
-        {error && (
-          <p role="alert" className="text-red-600 text-sm">
-            {error}
-          </p>
-        )}
+        {error && <ErrorText>{error}</ErrorText>}
 
         {selected && (
           <StopDetails
@@ -286,7 +284,7 @@ function BusExplorer({ settings }: { settings: Settings }): React.JSX.Element {
         )}
 
         <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-500 text-xs">즐겨찾기</p>
+          <SectionLabel>즐겨찾기</SectionLabel>
           {favorites.length === 0 ? (
             <p className="text-neutral-400 text-sm">정류소나 노선의 ☆을 눌러 추가하세요</p>
           ) : (
