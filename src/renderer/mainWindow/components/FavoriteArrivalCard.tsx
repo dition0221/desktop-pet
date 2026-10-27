@@ -1,6 +1,7 @@
 import type { BusFavorite, StopArrivals } from '@preload/api'
 import { arrivalLabel, favoriteArrivals } from '@renderer/mainWindow/arrivalFormat'
 import { BUS_ERROR_MESSAGES } from '@renderer/mainWindow/busErrorMessages'
+import AlertToggle from '@renderer/mainWindow/components/AlertToggle'
 import Spinner from '@renderer/mainWindow/components/Spinner'
 
 /** 정류소 즐겨찾기는 노선이 많을 수 있어 가까운 순으로 이만큼만 */
@@ -12,6 +13,7 @@ interface FavoriteArrivalCardProps {
   stop: StopArrivals | undefined
   /** 조회 주기가 돌고 있는지 — 운행 시간 밖이면 결과 자리를 비워 둔다 */
   polling: boolean
+  alertMinutes: number
   now: number
 }
 
@@ -19,6 +21,7 @@ function FavoriteArrivalCard({
   favorite,
   stop,
   polling,
+  alertMinutes,
   now
 }: FavoriteArrivalCardProps): React.JSX.Element {
   const updatedAt = stop?.updatedAt ?? null
@@ -40,6 +43,18 @@ function FavoriteArrivalCard({
         )}
         <h2 className="truncate font-semibold">{favorite.stop.name}</h2>
         <span className="shrink-0 text-neutral-400 text-xs">{favorite.stop.number}</span>
+        {favorite.route && (
+          <span className="ml-auto self-center">
+            <AlertToggle
+              active={favorite.alert}
+              label={`도착 ${alertMinutes}분 전에 펫이 알려 주기`}
+              onChange={(active) => {
+                const routeId = favorite.route?.id
+                if (routeId) void window.api.bus.setFavoriteAlert(favorite.stop.id, routeId, active)
+              }}
+            />
+          </span>
+        )}
       </header>
 
       {stop === undefined && polling && <Spinner className="size-4 text-primary-600" />}

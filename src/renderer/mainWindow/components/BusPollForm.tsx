@@ -1,4 +1,5 @@
 import type { BusPollSettings } from '@preload/api'
+import Select from '@renderer/mainWindow/components/Select'
 import TextInput from '@renderer/mainWindow/components/TextInput'
 import { useEffect, useId, useState } from 'react'
 
@@ -8,6 +9,7 @@ const INTERVAL_OPTIONS: { value: BusPollSettings['intervalSec']; label: string }
   { value: 120, label: '2분' },
   { value: 300, label: '5분' }
 ]
+const ALERT_MINUTE_OPTIONS: BusPollSettings['alertMinutes'][] = [3, 5, 10, 15]
 
 type ActiveHours = BusPollSettings['activeHours']
 
@@ -17,6 +19,7 @@ interface BusPollFormProps {
 
 function BusPollForm({ settings }: BusPollFormProps): React.JSX.Element {
   const intervalId = useId()
+  const alertId = useId()
   // 시각 입력은 칸 하나만 바꿔도 change가 와서, 중간값이 저장돼 조회를 깨우지 않게 포커스가 빠질 때 저장한다
   const [hours, setHours] = useState<ActiveHours>(settings.activeHours)
 
@@ -24,37 +27,35 @@ function BusPollForm({ settings }: BusPollFormProps): React.JSX.Element {
     setHours(settings.activeHours)
   }, [settings.activeHours])
 
+  const save = (patch: Partial<BusPollSettings>): void => {
+    void window.api.bus.setPollSettings({ ...settings, ...patch })
+  }
+
   const saveHours = (): void => {
     const changed =
       hours.start !== settings.activeHours.start || hours.end !== settings.activeHours.end
-    if (changed && hours.start && hours.end) {
-      void window.api.bus.setPollSettings({ ...settings, activeHours: hours })
-    }
+    if (changed && hours.start && hours.end) save({ activeHours: hours })
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="font-medium text-sm">도착 정보 갱신</p>
+      <p className="font-medium text-sm">도착 정보 갱신 · 알림</p>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <label htmlFor={intervalId} className="flex items-center gap-2">
           <span className="text-neutral-500">간격</span>
-          <select
+          <Select
             id={intervalId}
             value={settings.intervalSec}
             onChange={(event) =>
-              void window.api.bus.setPollSettings({
-                ...settings,
-                intervalSec: Number(event.target.value) as BusPollSettings['intervalSec']
-              })
+              save({ intervalSec: Number(event.target.value) as BusPollSettings['intervalSec'] })
             }
-            className="rounded-md border border-neutral-300 bg-white px-2 py-1.5 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
           >
             {INTERVAL_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <div className="flex items-center gap-2">
           <span className="text-neutral-500">운행 시간</span>
@@ -74,10 +75,27 @@ function BusPollForm({ settings }: BusPollFormProps): React.JSX.Element {
             onBlur={saveHours}
           />
         </div>
+        <label htmlFor={alertId} className="flex items-center gap-2">
+          <span className="text-neutral-500">알림</span>
+          <Select
+            id={alertId}
+            value={settings.alertMinutes}
+            onChange={(event) =>
+              save({ alertMinutes: Number(event.target.value) as BusPollSettings['alertMinutes'] })
+            }
+          >
+            {ALERT_MINUTE_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes}분 전
+              </option>
+            ))}
+          </Select>
+        </label>
       </div>
       <p className="text-neutral-400 text-xs">
-        메인 창이 열려 있고 운행 시간일 때만 갱신해요. 시작과 끝을 같게 두면 하루 종일이에요.
-        즐겨찾기가 많으면 하루 호출 한도에 맞춰 간격이 자동으로 늘어나요.
+        메인 창이 열려 있을 때는 모든 즐겨찾기를, 닫혀 있을 때는 홈에서 🔔을 켠 노선만 운행 시간에
+        갱신해요. 시작과 끝을 같게 두면 하루 종일이에요. 즐겨찾기가 많으면 하루 호출 한도에 맞춰
+        간격이 자동으로 늘어나요.
       </p>
     </div>
   )

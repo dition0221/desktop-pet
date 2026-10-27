@@ -70,6 +70,7 @@ function HomeScreen(): React.JSX.Element {
                 favorite={favorite}
                 stop={snapshot.stops[favorite.stop.id]}
                 polling={snapshot.status === 'polling'}
+                alertMinutes={settings.busPoll.alertMinutes}
                 now={now}
               />
             ))}
