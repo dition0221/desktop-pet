@@ -14,6 +14,7 @@ import { denyAllPermissions, registerWebContentsGuards } from '@main/security'
 import { registerSecretsIpc } from '@main/store/secrets'
 import { loadSettings, registerSettingsIpc } from '@main/store/settings'
 import { createTray } from '@main/tray'
+import { registerUpdateIpc, startUpdater } from '@main/updater'
 import { app, Menu, protocol } from 'electron'
 
 const APP_USER_MODEL_ID = 'io.github.dition0221.desktop-pet'
@@ -59,10 +60,12 @@ function bootstrap(): void {
     registerPackIpc()
     registerPetVisibilityIpc()
     registerSpeechIpc()
+    registerUpdateIpc()
     createMainWindow()
     startArrivalPoller()
     startOverlayWindows()
     startPet(pack)
     createTray()
+    startUpdater()
   })
 }
