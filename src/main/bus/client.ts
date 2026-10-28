@@ -6,6 +6,7 @@ import {
   PortalError,
   toBusErrorCode
 } from '@main/bus/portal'
+import { createStaticCache } from '@main/bus/staticCache'
 import {
   DAEJEON_CITY_CODE,
   parseTagoPage,
@@ -36,9 +37,6 @@ const PAGE_SIZE = '100'
 /** 순환 노선은 경유 정류소가 100개를 넘을 수 있어 넉넉히 받는다 */
 const ROUTE_PATH_PAGE_SIZE = '300'
 const CITY_PARAMS = { cityCode: String(DAEJEON_CITY_CODE), pageNo: '1', numOfRows: PAGE_SIZE }
-/** 정류소·노선은 자주 바뀌지 않음 — 지도를 오가며 같은 조회를 반복하지 않되 상주 앱이라 하루 뒤엔 다시 받는다 */
-const STATIC_CACHE_TTL_MS = 24 * 60 * 60 * 1000
-const STATIC_CACHE_LIMIT = 200
 /** 소수 셋째 자리 ≈ 100m 격자 — 지도를 조금 옮겼다 돌아와도 같은 칸이면 캐시를 쓴다 */
 const NEARBY_GRID_DECIMALS = 3
 
@@ -53,11 +51,6 @@ class BusRequestError extends Error {
   constructor(readonly code: BusErrorCode) {
     super(code)
   }
-}
-
-interface CacheEntry<T> {
-  value: T
-  savedAt: number
 }
 
 /** 저장된 키로 부르고, 로그에는 키를 가린 원인만 남긴다. 파서에는 서버 시각(Date 헤더)도 넘긴다 */
@@ -139,24 +132,6 @@ async function toResult<T>(task: () => Promise<T>): Promise<BusResult<T>> {
   }
 }
 
-/** 빈 결과는 "잘못된 ID"와 "일시적 누락"을 구분할 수 없어 캐시하지 않는다 */
-function createStaticCache<T>(
-  isEmpty: (value: T) => boolean
-): (key: string, load: () => Promise<T>) => Promise<T> {
-  const entries = new Map<string, CacheEntry<T>>()
-  return async (key, load) => {
-    const hit = entries.get(key)
-    if (hit && Date.now() - hit.savedAt < STATIC_CACHE_TTL_MS) return hit.value
-
-    const value = await load()
-    if (isEmpty(value)) return value
-    entries.delete(key)
-    if (entries.size >= STATIC_CACHE_LIMIT) entries.delete(entries.keys().next().value as string)
-    entries.set(key, { value, savedAt: Date.now() })
-    return value
-  }
-}
-
 function uniqueById<T extends { id: string }>(items: T[]): T[] {
   return [...new Map(items.map((item) => [item.id, item])).values()]
 }
@@ -168,15 +143,14 @@ const stopRoutesCache = createStaticCache<BusRoute[]>(isEmptyList)
 const routePathCache = createStaticCache<BusRouteStop[]>(isEmptyList)
 
 export function nearbyStops(lat: number, lng: number): Promise<BusResult<BusStop[]>> {
-  const gpsLati = lat.toFixed(NEARBY_GRID_DECIMALS)
-  const gpsLong = lng.toFixed(NEARBY_GRID_DECIMALS)
+  const cell = `${lat.toFixed(NEARBY_GRID_DECIMALS)},${lng.toFixed(NEARBY_GRID_DECIMALS)}`
   return toResult(() =>
-    nearbyCache(`${gpsLati},${gpsLong}`, async () =>
+    nearbyCache(cell, async () =>
       uniqueById(
         await requestItems(
           'stop',
           'getCrdntPrxmtSttnList',
-          { pageNo: '1', numOfRows: PAGE_SIZE, gpsLati, gpsLong },
+          { pageNo: '1', numOfRows: PAGE_SIZE, gpsLati: String(lat), gpsLong: String(lng) },
           stopItemSchema
         )
       )
