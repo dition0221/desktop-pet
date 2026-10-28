@@ -1,7 +1,9 @@
 import type { ArrivalsSnapshot, Settings } from '@preload/api'
 import FavoriteArrivalCard from '@renderer/mainWindow/components/FavoriteArrivalCard'
 import Page from '@renderer/mainWindow/components/Page'
+import SortableFavorites from '@renderer/mainWindow/components/SortableFavorites'
 import { useArrivals } from '@renderer/mainWindow/hooks/useArrivals'
+import { favoriteId } from '@renderer/mainWindow/hooks/useFavoriteOrder'
 import { useNow } from '@renderer/mainWindow/hooks/useNow'
 import { useSettings } from '@renderer/mainWindow/hooks/useSettings'
 import { createFileRoute, Link } from '@tanstack/react-router'
@@ -63,18 +65,22 @@ function HomeScreen(): React.JSX.Element {
           {statusText(snapshot, settings) && (
             <p className="text-neutral-500 text-sm">{statusText(snapshot, settings)}</p>
           )}
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3">
-            {favorites.map((favorite) => (
-              <FavoriteArrivalCard
-                key={`${favorite.stop.id}:${favorite.route?.id ?? ''}`}
-                favorite={favorite}
-                stop={snapshot.stops[favorite.stop.id]}
-                polling={snapshot.status === 'polling'}
-                alertMinutes={settings.busPoll.alertMinutes}
-                now={now}
-              />
-            ))}
-          </div>
+          <SortableFavorites favorites={favorites} layout="grid">
+            {(items) => (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3">
+                {items.map((favorite) => (
+                  <FavoriteArrivalCard
+                    key={favoriteId(favorite)}
+                    favorite={favorite}
+                    stop={snapshot.stops[favorite.stop.id]}
+                    polling={snapshot.status === 'polling'}
+                    alertMinutes={settings.busPoll.alertMinutes}
+                    now={now}
+                  />
+                ))}
+              </div>
+            )}
+          </SortableFavorites>
         </section>
       )}
     </Page>

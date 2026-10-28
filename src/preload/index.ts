@@ -35,6 +35,7 @@ const api: DesktopPetApi = {
     addFavorite: (favorite) => ipcRenderer.invoke(IPC.busAddFavorite, favorite),
     removeFavorite: (stopId, routeId) =>
       ipcRenderer.invoke(IPC.busRemoveFavorite, { stopId, routeId }),
+    reorderFavorites: (order) => ipcRenderer.invoke(IPC.busReorderFavorites, order),
     getArrivals: () => ipcRenderer.invoke(IPC.busGetArrivals),
     onArrivalsChange: (listener) => subscribe(IPC.busArrivalsChanged, listener),
     setPollSettings: (settings) => ipcRenderer.invoke(IPC.busSetPollSettings, settings),

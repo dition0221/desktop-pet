@@ -64,6 +64,12 @@ export interface BusFavorite {
   alert: boolean
 }
 
+/** routeId가 null이면 정류소 즐겨찾기 */
+export interface BusFavoriteKey {
+  stopId: string
+  routeId: string | null
+}
+
 export type BusErrorCode =
   | 'no-key'
   | 'invalid-key'
@@ -208,6 +214,8 @@ export interface DesktopPetApi {
     addFavorite(favorite: BusFavorite): Promise<AddFavoriteResult>
     /** routeId가 null이면 정류소 즐겨찾기 */
     removeFavorite(stopId: string, routeId: string | null): Promise<void>
+    /** 목록에 없는 즐겨찾기는 원래 순서대로 뒤에 남는다 */
+    reorderFavorites(order: BusFavoriteKey[]): Promise<void>
     /** 즐겨찾기 정류소 도착 정보 — 메인 창이 보이는 동안만 메인이 주기적으로 갱신한다 */
     getArrivals(): Promise<ArrivalsSnapshot>
     onArrivalsChange(listener: (snapshot: ArrivalsSnapshot) => void): () => void
