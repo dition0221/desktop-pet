@@ -36,3 +36,8 @@ nsis:
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 npmRebuild: false
+# 자동 업데이트가 이 저장소 릴리스의 latest.yml로 새 버전을 찾는다 — 업로드는 직접 (build:win은 --publish never)
+publish:
+  provider: github
+  owner: dition0221
+  repo: desktop-pet

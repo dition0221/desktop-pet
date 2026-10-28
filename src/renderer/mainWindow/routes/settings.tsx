@@ -2,6 +2,7 @@ import BusKeyTest from '@renderer/mainWindow/components/BusKeyTest'
 import BusPollForm from '@renderer/mainWindow/components/BusPollForm'
 import KeyForm from '@renderer/mainWindow/components/KeyForm'
 import Page from '@renderer/mainWindow/components/Page'
+import UpdatePanel from '@renderer/mainWindow/components/UpdatePanel'
 import { useSettings } from '@renderer/mainWindow/hooks/useSettings'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -21,6 +22,7 @@ function SettingsScreen(): React.JSX.Element {
       </div>
       {settings && <BusPollForm settings={settings.busPoll} />}
       <KeyForm secretId="geminiApiKey" label="Gemini API 키 (대화)" />
+      <UpdatePanel />
     </Page>
   )
 }

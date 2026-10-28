@@ -162,6 +162,18 @@ export type SaveSecretResult =
   | { ok: true; status: SecretStatus }
   | { ok: false; reason: 'encryption-unavailable' }
 
+/** dev = 설치본이 아니라 확인하지 않음 */
+export type UpdateStatus =
+  | { state: 'dev' | 'idle' | 'checking' | 'error' }
+  | { state: 'up-to-date'; checkedAt: number }
+  | { state: 'downloading'; version: string; percent: number }
+  | { state: 'ready'; version: string }
+
+export interface UpdateSnapshot {
+  currentVersion: string
+  status: UpdateStatus
+}
+
 /** preload 구현과 렌더러 타입 선언이 함께 참조 — 기능 추가 시 시그니처를 여기에 먼저 정의 */
 export interface DesktopPetApi {
   /** 메인 창에서만 허용 */
@@ -202,6 +214,14 @@ export interface DesktopPetApi {
     setPollSettings(settings: BusPollSettings): Promise<void>
     /** 알림이 켜진 즐겨찾기는 메인 창을 닫아도 운행 시간 동안 조회한다 */
     setFavoriteAlert(stopId: string, routeId: string, enabled: boolean): Promise<void>
+  }
+  /** 메인 창에서만 허용 — 새 버전은 알아서 받아 두고, 설치는 사용자가 고른 때 다시 시작하며 한다 */
+  updates: {
+    getStatus(): Promise<UpdateSnapshot>
+    onStatusChange(listener: (snapshot: UpdateSnapshot) => void): () => void
+    check(): Promise<void>
+    /** 받아 둔 새 버전이 없으면 아무것도 하지 않는다 */
+    install(): Promise<void>
   }
   pet: {
     /** 메인 창에서만 허용 — 현재 값은 settings.petVisible */

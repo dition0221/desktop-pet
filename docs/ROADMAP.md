@@ -165,7 +165,8 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 - [ ] 마이크 음성 인식 (STT) — Groq Whisper 무료 API 또는 로컬 faster-whisper, 권한 핸들러에서 마이크만 허용
 - [ ] 전체화면 앱(게임 등) 실행 중 펫 자동 숨김
 - [ ] Windows 시작 시 자동 실행 (`setLoginItemSettings`)
-- [ ] 자동 업데이트 (electron-updater) + 코드 서명 (서명이 없으면 SmartScreen 경고)
+- [x] 자동 업데이트 (electron-updater + GitHub Releases) — 시작 후·6시간마다 확인해 받아 두고, 말풍선·트레이·설정에서 다시 시작해 설치
+- [ ] 코드 서명 (서명이 없으면 첫 설치 때 SmartScreen 경고)
 - [ ] 그 외 기능 (미정)
 
 ---
@@ -259,7 +260,7 @@ TTS(하치와레 목소리)는 앱 개발과 별개로 [병렬 트랙](#병렬-�
 
 **의존성**
 - [x] pnpm 빌드 스크립트 허용은 `pnpm ignored-builds`로 확인된 필요한 패키지만
-- [ ] Electron 주기적 업데이트 (Chromium 보안 패치) — 자동 업데이트가 생기기 전까지는 새 릴리스를 직접 설치해야 반영됨
+- [ ] Electron 주기적 업데이트 (Chromium 보안 패치) — 올린 뒤 릴리스를 내야 자동 업데이트로 사용자에게 반영됨
 
 ## 구조
 

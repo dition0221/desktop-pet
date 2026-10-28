@@ -41,6 +41,12 @@ const api: DesktopPetApi = {
     setFavoriteAlert: (stopId, routeId, enabled) =>
       ipcRenderer.invoke(IPC.busSetFavoriteAlert, { stopId, routeId, enabled })
   },
+  updates: {
+    getStatus: () => ipcRenderer.invoke(IPC.updateGetStatus),
+    onStatusChange: (listener) => subscribe(IPC.updateStatusChanged, listener),
+    check: () => ipcRenderer.invoke(IPC.updateCheck),
+    install: () => ipcRenderer.invoke(IPC.updateInstall)
+  },
   pet: {
     setVisible: (visible) => ipcRenderer.invoke(IPC.petSetVisible, visible),
     getSprite: () => ipcRenderer.invoke(IPC.petGetSprite),
