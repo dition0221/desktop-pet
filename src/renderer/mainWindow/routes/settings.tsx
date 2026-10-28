@@ -1,3 +1,4 @@
+import BusKeyGuide from '@renderer/mainWindow/components/BusKeyGuide'
 import BusKeyTest from '@renderer/mainWindow/components/BusKeyTest'
 import BusPollForm from '@renderer/mainWindow/components/BusPollForm'
 import KeyForm from '@renderer/mainWindow/components/KeyForm'
@@ -17,7 +18,11 @@ function SettingsScreen(): React.JSX.Element {
   return (
     <Page title="설정">
       <div className="flex flex-col gap-3">
-        <KeyForm secretId="busServiceKey" label="공공데이터포털 서비스 키 (버스)" />
+        <KeyForm
+          secretId="busServiceKey"
+          label="공공데이터포털 서비스 키 (버스)"
+          guide={<BusKeyGuide />}
+        />
         <BusKeyTest />
       </div>
       {settings && <BusPollForm settings={settings.busPoll} />}
