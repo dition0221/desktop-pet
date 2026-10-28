@@ -1,0 +1,5 @@
+# onlyBuiltDependencies에는 `pnpm ignored-builds`로 확인한 필요한 패키지만 추가 — 현재 없음
+
+ignoredBuiltDependencies:
+  # Squirrel.Windows 타겟용 7-Zip 선택 스크립트 — NSIS만 쓰므로 불필요
+  - electron-winstaller

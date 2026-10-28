@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "_example",
+  "name": "예제 고양이",
+  "sprite": {
+    "image": "sprite.png",
+    "frameWidth": 32,
+    "frameHeight": 32,
+    "scale": 2
+  },
+  "animations": {
+    "idle": { "row": 0, "frames": 2, "fps": 2 },
+    "walk": { "row": 1, "frames": 4, "fps": 8 }
+  }
+}

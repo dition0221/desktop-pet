@@ -1,0 +1,43 @@
+appId: io.github.dition0221.desktop-pet
+productName: desktop-pet
+directories:
+  buildResources: build
+  output: release/${version}
+# 화이트리스트 — 문서·설정 파일이 새로 생겨도 설치본에 섞이지 않게
+files:
+  - out/**
+  - resources/**
+  - package.json
+asarUnpack:
+  - resources/**
+# 동봉 예제 팩 — 사용자 팩은 userData/packs
+extraResources:
+  - from: packs/_example
+    to: packs/_example
+    # 디스크 기준으로 복사됨 — 스프라이트 원본·작업 파일이 섞이지 않게 형식을 고정
+    filter:
+      - pack.json
+      - "**/*.png"
+# https://www.electronjs.org/docs/latest/tutorial/fuses
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  grantFileProtocolExtraPrivileges: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+win:
+  executableName: desktop-pet
+  target:
+    - nsis
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+npmRebuild: false
+# 자동 업데이트가 이 저장소 릴리스의 latest.yml로 새 버전을 찾는다 — 업로드는 직접 (build:win은 --publish never)
+publish:
+  provider: github
+  owner: dition0221
+  repo: desktop-pet

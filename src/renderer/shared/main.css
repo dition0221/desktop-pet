@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* primary-400 = 하치와레 가르마 색, 나머지는 같은 색상(OKLCH h≈229)에서 채도를 올린 하늘색 — static은 Leaflet CSS가 변수를 직접 참조해서 */
+@theme static {
+  --color-primary-50: #edf9ff;
+  --color-primary-100: #d6f2ff;
+  --color-primary-200: #b0e5ff;
+  --color-primary-300: #7ad1f8;
+  --color-primary-400: #75a1b6;
+  --color-primary-500: #00a6df;
+  --color-primary-600: #008bcc;
+  --color-primary-700: #006ea7;
+  --color-primary-800: #005382;
+}
+
+@theme {
+  --animate-bubble-in: bubble-in 180ms ease-out;
+
+  /* translate 속성은 -translate-x-1/2 정렬과 겹쳐 덮어쓰므로 transform으로 움직인다 */
+  @keyframes bubble-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  /* Tailwind v4 preflight는 버튼 커서를 default로 되돌림 — 프로젝트 기본은 pointer */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  /* 스크롤 영역에 올렸을 때만 얇은 막대를 보여 준다 */
+  *:hover {
+    scrollbar-color: rgb(0 0 0 / 0.22) transparent;
+  }
+}
+
+/* 끄는 항목 밖으로 포인터가 나가도 쥔 손을 유지한다 — 레이어 밖이라 유틸리티 커서보다 우선 */
+:root[data-dragging],
+:root[data-dragging] * {
+  cursor: grabbing;
+}
