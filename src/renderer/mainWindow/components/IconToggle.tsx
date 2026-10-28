@@ -13,7 +13,7 @@ function IconToggle({ active, label, icon: Icon, onChange }: IconToggleProps): R
       aria-pressed={active}
       title={label}
       onClick={() => onChange(!active)}
-      className={`flex size-7 shrink-0 items-center justify-center rounded-md transition-colors ${active ? 'text-primary-600 hover:text-primary-700' : 'text-neutral-300 hover:text-primary-500'}`}
+      className={`flex size-8 shrink-0 items-center justify-center rounded-md transition-colors ${active ? 'text-primary-600 hover:text-primary-700' : 'text-neutral-400 hover:text-primary-500'}`}
     >
       <Icon filled={active} />
     </button>

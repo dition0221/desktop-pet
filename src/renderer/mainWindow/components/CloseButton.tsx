@@ -12,7 +12,7 @@ function CloseButton({ label, onClick, className = '' }: CloseButtonProps): Reac
       onClick={onClick}
       className={`shrink-0 rounded p-1 text-neutral-400 transition-colors hover:text-red-500 ${className}`}
     >
-      <svg viewBox="0 0 16 16" aria-hidden="true" className="size-3.5">
+      <svg viewBox="0 0 16 16" aria-hidden="true" className="size-4">
         <path
           d="M4 4l8 8M12 4l-8 8"
           stroke="currentColor"
