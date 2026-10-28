@@ -43,7 +43,7 @@ function FavoriteArrivalCard({
         <h2 className="truncate font-semibold">{favorite.stop.name}</h2>
         <span className="shrink-0 text-neutral-400 text-xs">{favorite.stop.number}</span>
         {favorite.route && (
-          <span className="ml-auto self-center">
+          <span className="-my-1 ml-auto self-center">
             <IconToggle
               active={favorite.alert}
               label={`도착 ${alertMinutes}분 전에 펫이 알려 주기`}
