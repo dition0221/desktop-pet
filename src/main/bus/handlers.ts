@@ -1,10 +1,11 @@
 import { getArrivals } from '@main/bus/arrivalPoller'
 import { nearbyStops, routePath, searchStops, stopRoutes, testBusKey } from '@main/bus/client'
+import { isSameFavorite, reorderFavorites } from '@main/bus/favorites'
 import { busPollSettingsSchema } from '@main/bus/pollPlan'
 import { busFavoriteSchema, TAGO_ID_PATTERN } from '@main/bus/tago'
 import { handle } from '@main/ipc'
 import { getSettings, MAX_BUS_FAVORITES, updateSettings } from '@main/store/settings'
-import type { AddFavoriteResult, BusFavorite } from '@preload/api'
+import type { AddFavoriteResult, BusFavorite, BusFavoriteKey } from '@preload/api'
 import { IPC } from '@preload/channels'
 import { z } from 'zod'
 
@@ -17,15 +18,10 @@ const coordinates = z.object({
 const favoriteKey = z.object({ stopId: tagoId, routeId: tagoId.nullable() })
 const favoriteAlert = z.object({ stopId: tagoId, routeId: tagoId, enabled: z.boolean() })
 
-function isSameFavorite(favorite: BusFavorite, stopId: string, routeId: string | null): boolean {
-  return favorite.stop.id === stopId && (favorite.route?.id ?? null) === routeId
-}
-
 function addFavorite(favorite: BusFavorite): AddFavoriteResult {
   const favorites = getSettings().busFavorites
-  const exists = favorites.some((saved) =>
-    isSameFavorite(saved, favorite.stop.id, favorite.route?.id ?? null)
-  )
+  const key = { stopId: favorite.stop.id, routeId: favorite.route?.id ?? null }
+  const exists = favorites.some((saved) => isSameFavorite(saved, key))
   if (exists) return { ok: true }
   if (favorites.length >= MAX_BUS_FAVORITES) {
     return { ok: false, reason: 'limit', limit: MAX_BUS_FAVORITES }
@@ -34,18 +30,16 @@ function addFavorite(favorite: BusFavorite): AddFavoriteResult {
   return { ok: true }
 }
 
-function removeFavorite({ stopId, routeId }: z.output<typeof favoriteKey>): void {
+function removeFavorite(key: BusFavoriteKey): void {
   const favorites = getSettings().busFavorites
-  updateSettings({
-    busFavorites: favorites.filter((favorite) => !isSameFavorite(favorite, stopId, routeId))
-  })
+  updateSettings({ busFavorites: favorites.filter((favorite) => !isSameFavorite(favorite, key)) })
 }
 
-function setFavoriteAlert({ stopId, routeId, enabled }: z.output<typeof favoriteAlert>): void {
+function setFavoriteAlert({ enabled, ...key }: z.output<typeof favoriteAlert>): void {
   const favorites = getSettings().busFavorites
   updateSettings({
     busFavorites: favorites.map((favorite) =>
-      isSameFavorite(favorite, stopId, routeId) ? { ...favorite, alert: enabled } : favorite
+      isSameFavorite(favorite, key) ? { ...favorite, alert: enabled } : favorite
     )
   })
 }
@@ -61,6 +55,11 @@ export function registerBusIpc(): void {
   handle(IPC.busRoutePath, { allow, payload: tagoId }, routePath)
   handle(IPC.busAddFavorite, { allow, payload: busFavoriteSchema }, addFavorite)
   handle(IPC.busRemoveFavorite, { allow, payload: favoriteKey }, removeFavorite)
+  handle(
+    IPC.busReorderFavorites,
+    { allow, payload: z.array(favoriteKey).max(MAX_BUS_FAVORITES) },
+    (order) => updateSettings({ busFavorites: reorderFavorites(getSettings().busFavorites, order) })
+  )
   handle(IPC.busGetArrivals, { allow, payload: z.undefined() }, getArrivals)
   handle(IPC.busSetPollSettings, { allow, payload: busPollSettingsSchema }, (busPoll) =>
     updateSettings({ busPoll })

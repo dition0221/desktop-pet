@@ -14,6 +14,7 @@ export const IPC = {
   busRoutePath: 'bus:route-path',
   busAddFavorite: 'bus:add-favorite',
   busRemoveFavorite: 'bus:remove-favorite',
+  busReorderFavorites: 'bus:reorder-favorites',
   busGetArrivals: 'bus:get-arrivals',
   busArrivalsChanged: 'bus:arrivals-changed',
   busSetPollSettings: 'bus:set-poll-settings',
