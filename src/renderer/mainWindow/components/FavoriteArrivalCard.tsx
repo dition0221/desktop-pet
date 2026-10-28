@@ -6,6 +6,8 @@ import { BellIcon } from '@renderer/mainWindow/components/Icons'
 import IconToggle from '@renderer/mainWindow/components/IconToggle'
 import RouteBadge from '@renderer/mainWindow/components/RouteBadge'
 import Spinner from '@renderer/mainWindow/components/Spinner'
+import { favoriteId } from '@renderer/mainWindow/hooks/useFavoriteOrder'
+import { useSortableItem } from '@renderer/mainWindow/hooks/useSortableItem'
 
 /** 정류소 즐겨찾기는 노선이 많을 수 있어 가까운 순으로 이만큼만 */
 const MAX_ROWS = 5
@@ -35,9 +37,15 @@ function FavoriteArrivalCard({
           const label = arrivalLabel(arrival, updatedAt, now)
           return label ? [{ arrival, label }] : []
         })
+  const { ref, listeners, isDragging, style } = useSortableItem(favoriteId(favorite))
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4">
+    <article
+      ref={ref}
+      style={style}
+      {...listeners}
+      className={`flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 ${isDragging ? 'z-10 shadow-lg' : ''}`}
+    >
       <header className="flex items-baseline gap-1.5">
         {favorite.route && <RouteBadge number={favorite.route.number} />}
         <h2 className="truncate font-semibold">{favorite.stop.name}</h2>

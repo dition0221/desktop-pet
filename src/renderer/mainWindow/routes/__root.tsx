@@ -29,7 +29,7 @@ function RootLayout(): React.JSX.Element {
           </Link>
         ))}
       </nav>
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
         <Outlet />
       </main>
     </div>
