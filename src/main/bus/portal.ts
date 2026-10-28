@@ -1,8 +1,8 @@
 import type { BusErrorCode } from '@preload/api'
 
-/** 공공데이터포털 게이트웨이는 서비스·응답 형식과 상관없이 인증·한도 오류를 이 XML로 돌려준다 */
-const GATEWAY_REASON_PATTERN = /<returnReasonCode>(\d+)<\/returnReasonCode>/
-const GATEWAY_MESSAGE_PATTERN = /<returnAuthMsg>([^<]*)<\/returnAuthMsg>/
+/** 공공데이터포털 게이트웨이는 인증·한도 오류를 요청 형식에 따라 XML이나 JSON(`_type=json`)으로 돌려준다 */
+const GATEWAY_REASON_PATTERN = /returnReasonCode(?:>|"\s*:\s*"?)(\d+)/
+const GATEWAY_MESSAGE_PATTERN = /returnAuthMsg(?:>|"\s*:\s*")([^<"]*)/
 const PERCENT_ENCODED_PATTERN = /%[0-9a-f]{2}/i
 
 const GATEWAY_ERROR_CODES: Record<string, BusErrorCode> = {

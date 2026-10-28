@@ -20,6 +20,15 @@ const STOP = {
 }
 const GATEWAY_ERROR =
   '<OpenAPI_ServiceResponse><cmmMsgHeader><errMsg>SERVICE ERROR</errMsg><returnAuthMsg>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</returnAuthMsg><returnReasonCode>30</returnReasonCode></cmmMsgHeader></OpenAPI_ServiceResponse>'
+const GATEWAY_JSON_ERROR = JSON.stringify({
+  OpenAPI_ServiceResponse: {
+    cmmMsgHeader: {
+      errMsg: 'SERVICE_KEY_IS_NOT_REGISTERED_ERROR',
+      returnAuthMsg: '등록되지 않은 서비스키',
+      returnReasonCode: '30'
+    }
+  }
+})
 
 function catchError(task: () => unknown): unknown {
   try {
@@ -66,9 +75,11 @@ describe('parseTagoPage', () => {
     expect(() => parseTagoPage(envelope('', '22'), stopItemSchema)).toThrow(PortalError)
   })
 
-  it('게이트웨이 XML 오류를 코드로 바꾼다', () => {
+  it('게이트웨이 XML·JSON 오류를 코드로 바꾼다', () => {
     const error = catchError(() => parseTagoPage(GATEWAY_ERROR, stopItemSchema))
     expect(toBusErrorCode(error)).toBe('invalid-key')
+    const jsonError = catchError(() => parseTagoPage(GATEWAY_JSON_ERROR, stopItemSchema))
+    expect(toBusErrorCode(jsonError)).toBe('invalid-key')
     expect(toBusErrorCode(new PortalError('22', 'LIMITED'))).toBe('quota-exceeded')
     expect(toBusErrorCode(new Error('boom'))).toBe('unknown')
   })

@@ -12,6 +12,8 @@ const KEY_FILE_ERROR_MESSAGE = '키 파일을 읽거나 쓰지 못했어요'
 interface KeyFormProps {
   secretId: SecretId
   label: string
+  /** 키가 없을 때만 펼쳐 둔다 */
+  guide?: React.ReactNode
 }
 
 function savedLabel(status: SecretStatus): string {
@@ -20,7 +22,7 @@ function savedLabel(status: SecretStatus): string {
     : `저장됨 (끝자리 ${status.last4})`
 }
 
-function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
+function KeyForm({ secretId, label, guide }: KeyFormProps): React.JSX.Element {
   const inputId = useId()
   const [status, setStatus] = useState<SecretStatus | null>(null)
   const [value, setValue] = useState('')
@@ -97,6 +99,14 @@ function KeyForm({ secretId, label }: KeyFormProps): React.JSX.Element {
         )}
       </div>
       {error && <ErrorText>{error}</ErrorText>}
+      {status && guide && (
+        <details open={!status.saved} className="text-sm">
+          <summary className="cursor-pointer text-primary-700">키 받는 방법</summary>
+          <div className="mt-2 rounded-md border border-neutral-200 bg-white p-3 text-neutral-600">
+            {guide}
+          </div>
+        </details>
+      )}
     </form>
   )
 }
