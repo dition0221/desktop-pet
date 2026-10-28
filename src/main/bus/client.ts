@@ -39,6 +39,8 @@ const CITY_PARAMS = { cityCode: String(DAEJEON_CITY_CODE), pageNo: '1', numOfRow
 /** 정류소·노선은 자주 바뀌지 않음 — 지도를 오가며 같은 조회를 반복하지 않되 상주 앱이라 하루 뒤엔 다시 받는다 */
 const STATIC_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const STATIC_CACHE_LIMIT = 200
+/** 소수 셋째 자리 ≈ 100m 격자 — 지도를 조금 옮겼다 돌아와도 같은 칸이면 캐시를 쓴다 */
+const NEARBY_GRID_DECIMALS = 3
 
 const TAGO_SERVICES = {
   stop: 'BusSttnInfoInqireService',
@@ -138,57 +140,67 @@ async function toResult<T>(task: () => Promise<T>): Promise<BusResult<T>> {
 }
 
 /** 빈 결과는 "잘못된 ID"와 "일시적 누락"을 구분할 수 없어 캐시하지 않는다 */
-async function cached<T extends unknown[]>(
-  cache: Map<string, CacheEntry<T>>,
-  key: string,
-  load: () => Promise<T>
-): Promise<T> {
-  const hit = cache.get(key)
-  if (hit && Date.now() - hit.savedAt < STATIC_CACHE_TTL_MS) return hit.value
+function createStaticCache<T>(
+  isEmpty: (value: T) => boolean
+): (key: string, load: () => Promise<T>) => Promise<T> {
+  const entries = new Map<string, CacheEntry<T>>()
+  return async (key, load) => {
+    const hit = entries.get(key)
+    if (hit && Date.now() - hit.savedAt < STATIC_CACHE_TTL_MS) return hit.value
 
-  const value = await load()
-  if (value.length === 0) return value
-  cache.delete(key)
-  if (cache.size >= STATIC_CACHE_LIMIT) cache.delete(cache.keys().next().value as string)
-  cache.set(key, { value, savedAt: Date.now() })
-  return value
+    const value = await load()
+    if (isEmpty(value)) return value
+    entries.delete(key)
+    if (entries.size >= STATIC_CACHE_LIMIT) entries.delete(entries.keys().next().value as string)
+    entries.set(key, { value, savedAt: Date.now() })
+    return value
+  }
 }
 
 function uniqueById<T extends { id: string }>(items: T[]): T[] {
   return [...new Map(items.map((item) => [item.id, item])).values()]
 }
 
-const stopRoutesCache = new Map<string, CacheEntry<BusRoute[]>>()
-const routePathCache = new Map<string, CacheEntry<BusRouteStop[]>>()
+const isEmptyList = (items: unknown[]): boolean => items.length === 0
+const nearbyCache = createStaticCache<BusStop[]>(isEmptyList)
+const searchCache = createStaticCache<BusStopSearch>(({ stops }) => stops.length === 0)
+const stopRoutesCache = createStaticCache<BusRoute[]>(isEmptyList)
+const routePathCache = createStaticCache<BusRouteStop[]>(isEmptyList)
 
 export function nearbyStops(lat: number, lng: number): Promise<BusResult<BusStop[]>> {
-  return toResult(async () =>
-    uniqueById(
-      await requestItems(
-        'stop',
-        'getCrdntPrxmtSttnList',
-        { pageNo: '1', numOfRows: PAGE_SIZE, gpsLati: String(lat), gpsLong: String(lng) },
-        stopItemSchema
+  const gpsLati = lat.toFixed(NEARBY_GRID_DECIMALS)
+  const gpsLong = lng.toFixed(NEARBY_GRID_DECIMALS)
+  return toResult(() =>
+    nearbyCache(`${gpsLati},${gpsLong}`, async () =>
+      uniqueById(
+        await requestItems(
+          'stop',
+          'getCrdntPrxmtSttnList',
+          { pageNo: '1', numOfRows: PAGE_SIZE, gpsLati, gpsLong },
+          stopItemSchema
+        )
       )
     )
   )
 }
 
 export function searchStops(name: string): Promise<BusResult<BusStopSearch>> {
-  return toResult(async () => {
-    const page = await requestTago(
-      'stop',
-      'getSttnNoList',
-      { ...CITY_PARAMS, nodeNm: name },
-      stopItemSchema
-    )
-    return { stops: uniqueById(page.items), truncated: page.totalCount > Number(PAGE_SIZE) }
-  })
+  return toResult(() =>
+    searchCache(name, async () => {
+      const page = await requestTago(
+        'stop',
+        'getSttnNoList',
+        { ...CITY_PARAMS, nodeNm: name },
+        stopItemSchema
+      )
+      return { stops: uniqueById(page.items), truncated: page.totalCount > Number(PAGE_SIZE) }
+    })
+  )
 }
 
 export function stopRoutes(stopId: string): Promise<BusResult<BusRoute[]>> {
   return toResult(() =>
-    cached(stopRoutesCache, stopId, async () =>
+    stopRoutesCache(stopId, async () =>
       uniqueById(
         await requestItems(
           'stop',
@@ -204,7 +216,7 @@ export function stopRoutes(stopId: string): Promise<BusResult<BusRoute[]>> {
 
 export function routePath(routeId: string): Promise<BusResult<BusRouteStop[]>> {
   return toResult(() =>
-    cached(routePathCache, routeId, async () =>
+    routePathCache(routeId, async () =>
       (
         await requestItems(
           'route',
