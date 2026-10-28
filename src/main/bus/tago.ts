@@ -35,7 +35,9 @@ export function parseTagoPage<T>(text: string, itemSchema: z.ZodType<T>): TagoPa
   }
 
   const envelope = envelopeSchema.safeParse(json)
-  if (!envelope.success) throw new PortalError('invalid-response', envelope.error.message)
+  if (!envelope.success) {
+    throw gatewayError(text) ?? new PortalError('invalid-response', envelope.error.message)
+  }
   const { header, body } = envelope.data.response
   if (header.resultCode !== '00') throw new PortalError(header.resultCode, header.resultMsg)
   if (!body?.items) return { items: [], totalCount: 0 }

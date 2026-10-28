@@ -16,6 +16,16 @@ describe('게이트웨이 오류', () => {
     expect(gatewayError('<ServiceResult/>')).toBeNull()
   })
 
+  it('_type=json 요청의 인증 오류 JSON도 코드와 메시지를 읽는다', () => {
+    const json =
+      '{\n  "OpenAPI_ServiceResponse": {\n    "cmmMsgHeader": {\n      "returnAuthMsg": "등록되지 않은 서비스키",\n      "returnReasonCode": "30"\n    }\n  }\n}'
+    const error = gatewayError(json)
+    expect(error?.message).toBe('등록되지 않은 서비스키')
+    expect(toBusErrorCode(error)).toBe('invalid-key')
+    expect(toBusErrorCode(gatewayError('{"returnReasonCode": 22}'))).toBe('quota-exceeded')
+    expect(gatewayError('{"response":{"header":{"resultCode":"00"}}}')).toBeNull()
+  })
+
   it('매핑에 없는 코드와 다른 오류는 unknown', () => {
     expect(isKnownPortalError(new PortalError('constructor', ''))).toBe(false)
     expect(toBusErrorCode(new PortalError('99', ''))).toBe('unknown')
