@@ -32,9 +32,17 @@ Data : <img src="https://img.shields.io/badge/공공데이터포털-0066CC?style
 | TTS           | GPT-SoVITS — 로컬 Python API 서버 (앱에 포함하지 않음, 없으면 말풍선만 표시)                                    |
 | 공공 데이터   | 공공데이터포털 대전광역시 버스 API — 사용자 본인 API 키                                                         |
 
-## 시작하기
+## 설치
 
-> Phase 0(프로젝트 셋업) 완료 후 확정됩니다.
+[Releases](https://github.com/dition0221/desktop-pet/releases/latest)에서 `desktop-pet-<버전>-setup.exe`를 받아 실행합니다. (Windows 10 이상)
+- 코드 서명이 없어 처음 실행할 때 SmartScreen 경고가 뜹니다 — **추가 정보 → 실행**
+- 새 버전은 앱이 받아 두고, 다시 시작하면 설치됩니다
+
+**API 키** (앱의 설정 페이지에서 입력, 사용자 PC에만 암호화 저장)
+- 대전 버스: [공공데이터포털](https://www.data.go.kr/)에서 국토교통부(TAGO) 버스정류소정보·버스노선정보와 대전광역시 정류소별 도착정보 조회를 각각 활용신청 → 일반 인증키(Encoding·Decoding 어느 쪽이든) — 설정 페이지의 "키 받는 방법" 참고
+- AI 대화 (준비 중): [Google AI Studio](https://aistudio.google.com/)에서 Gemini API 키 발급 (무료) 또는 Claude API 키
+
+## 개발
 
 **필요 환경**: Windows 10 이상, Node.js 24+, pnpm 10
 
@@ -42,10 +50,6 @@ Data : <img src="https://img.shields.io/badge/공공데이터포털-0066CC?style
 pnpm install
 pnpm dev
 ```
-
-**API 키** (앱의 설정 페이지에서 입력, 사용자 PC에만 암호화 저장)
-- AI 대화: [Google AI Studio](https://aistudio.google.com/)에서 Gemini API 키 발급 (무료) 또는 Claude API 키
-- 대전 버스: [공공데이터포털](https://www.data.go.kr/)에서 대전광역시 버스 정류소·도착정보 API를 각각 활용신청 → **Decoding 키** 사용
 
 ## 구조 (예정)
 
