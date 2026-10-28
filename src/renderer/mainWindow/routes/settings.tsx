@@ -11,7 +11,7 @@ export const Route = createFileRoute('/settings')({
   component: SettingsScreen
 })
 
-/** TODO(Phase 4) — Gemini 키 테스트 버튼과 발급 안내 */
+/** TODO(Phase 4) — 대화를 열 때 Gemini 키 입력란(geminiApiKey)·테스트 버튼·발급 안내 */
 function SettingsScreen(): React.JSX.Element {
   const settings = useSettings()
 
@@ -26,7 +26,6 @@ function SettingsScreen(): React.JSX.Element {
         <BusKeyTest />
       </div>
       {settings && <BusPollForm settings={settings.busPoll} />}
-      <KeyForm secretId="geminiApiKey" label="Gemini API 키 (대화)" />
       <UpdatePanel />
     </Page>
   )
