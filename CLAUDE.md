@@ -84,5 +84,5 @@
 ## develop → main
 
 - **태그**: main의 머지 커밋에 `git tag -a v<버전>`을 달고 푸시한다
-- **GitHub Releases**: `pnpm build:win`으로 만든 설치 파일을 올린다 — 업로드 전에 사용자에게 확인받는다
+- **GitHub Releases**: `pnpm build:win`으로 만든 설치 파일·`.blockmap`·`latest.yml`을 `gh release create` 한 번으로 정식(Latest) 릴리스에 올린다 — 자동 업데이트가 최신 정식 릴리스의 `latest.yml`로 새 버전을 찾으므로 드래프트·프리릴리스나 파일을 나눠 올리는 것은 안 된다. 업로드 전에 사용자에게 확인받는다
 - **develop 동기화**: `develop`으로 이동 → pull → `git merge --ff-only main` → develop push. ff가 안 되면 머지하지 말고 알린다
