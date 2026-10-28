@@ -44,7 +44,7 @@ function FavoriteArrivalCard({
       ref={ref}
       style={style}
       {...listeners}
-      className={`flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 ${isDragging ? 'z-10 shadow-lg' : ''}`}
+      className={`flex cursor-pointer flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 ${isDragging ? 'z-10 shadow-lg' : ''}`}
     >
       <header className="flex items-baseline gap-1.5">
         {favorite.route && <RouteBadge number={favorite.route.number} />}

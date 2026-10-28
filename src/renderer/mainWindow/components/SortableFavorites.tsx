@@ -57,7 +57,12 @@ function SortableFavorites({
   )
   const { modifiers, strategy, autoScroll } = LAYOUTS[layout]
 
+  const setDragging = (dragging: boolean): void => {
+    document.documentElement.toggleAttribute('data-dragging', dragging)
+  }
+
   const onDragEnd = ({ active, over }: DragEndEvent): void => {
+    setDragging(false)
     if (over) move(String(active.id), String(over.id))
   }
 
@@ -67,7 +72,9 @@ function SortableFavorites({
       collisionDetection={closestCenter}
       modifiers={modifiers}
       autoScroll={autoScroll}
+      onDragStart={() => setDragging(true)}
       onDragEnd={onDragEnd}
+      onDragCancel={() => setDragging(false)}
     >
       <SortableContext items={ids} strategy={strategy}>
         {children(items)}

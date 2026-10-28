@@ -46,3 +46,9 @@
     scrollbar-color: rgb(0 0 0 / 0.22) transparent;
   }
 }
+
+/* 끄는 항목 밖으로 포인터가 나가도 쥔 손을 유지한다 — 레이어 밖이라 유틸리티 커서보다 우선 */
+:root[data-dragging],
+:root[data-dragging] * {
+  cursor: grabbing;
+}
