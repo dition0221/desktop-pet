@@ -125,11 +125,31 @@ function pollCursor(): void {
   setOverlaysIgnoreMouse(!over)
 }
 
+/** 포커스를 못 받는 창이 띄운 메뉴는 바깥을 눌러도 닫히지 않는다 — 메뉴가 떠 있는 동안만 포커스를 받는다 */
 function showPetMenu(window: BrowserWindow | null): void {
+  if (!window) return
+  let focusable = true
+  // setFocusable(false)는 오버레이 아래 창에 포커스를 넘기므로 두 번 부르면 메인 창 포커스를 뺏는다
+  const releaseFocus = (): void => {
+    if (!focusable || window.isDestroyed()) return
+    focusable = false
+    window.setFocusable(false)
+  }
+
+  window.setFocusable(true)
+  // Windows에서 setFocusable(true)가 작업 표시줄 숨김을 푼다
+  window.setSkipTaskbar(true)
+  window.focus()
   Menu.buildFromTemplate([
-    { label: '메인 창 열기', click: showMainWindow },
+    {
+      label: '메인 창 열기',
+      click: () => {
+        releaseFocus()
+        showMainWindow()
+      }
+    },
     { label: '펫 숨기기', click: () => setPetVisible(false) }
-  ]).popup(window ? { window } : undefined)
+  ]).popup({ window, callback: releaseFocus })
 }
 
 function registerPetIpc(): void {
